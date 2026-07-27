@@ -152,6 +152,36 @@
     border-radius:var(--radius);padding:12px 14px;margin-bottom:14px;
     font-size:0.85rem;font-weight:600;display:flex;align-items:center;gap:8px;cursor:pointer;
   }
+  .motiv-msg{font-size:1rem;font-weight:700;color:var(--accent);line-height:1.4;}
+  .stat-row{display:flex;gap:8px;margin-bottom:12px;}
+  .stat-tile{flex:1;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 6px;text-align:center;}
+  .stat-num{font-size:1.25rem;font-weight:700;color:var(--accent);line-height:1.15;}
+  .stat-label{font-size:0.65rem;color:var(--muted);margin-top:4px;}
+  .weekbar{background:var(--card2);border-radius:999px;height:14px;overflow:hidden;}
+  .weekbar-fill{background:var(--accent);height:100%;border-radius:999px;transition:width .3s;}
+  .weekbar-label{margin-top:8px;font-size:0.85rem;color:var(--muted);}
+  .streak-line{margin-top:6px;font-size:0.85rem;color:var(--text);}
+  .grid-scroll{overflow-x:auto;padding-bottom:2px;}
+  .grid-rows{display:flex;gap:3px;width:max-content;}
+  .grid-col{display:flex;flex-direction:column;gap:3px;}
+  .grid-cell{width:12px;height:12px;border-radius:3px;background:var(--card2);}
+  .grid-cell.grid-strength{background:var(--accent);}
+  .grid-cell.grid-cardio{background:var(--accent2);}
+  .grid-cell.grid-future{background:transparent;}
+  .legend{display:flex;gap:14px;margin-top:10px;font-size:0.72rem;color:var(--muted);flex-wrap:wrap;}
+  .legend-dot{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:4px;vertical-align:middle;}
+  .legend-strength{background:var(--accent);}
+  .legend-cardio{background:var(--accent2);}
+  .legend-empty{background:var(--card2);}
+  .pr-item{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:0.88rem;}
+  .pr-item:last-child{border-bottom:none;}
+  .pr-name{color:var(--text);}
+  .pr-val{color:var(--muted);font-variant-numeric:tabular-nums;}
+  .pr-recent{color:var(--accent);font-size:0.68rem;font-weight:700;margin-left:6px;}
+  .improve-item{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:0.85rem;}
+  .improve-item:last-child{border-bottom:none;}
+  .improve-delta{color:var(--accent);font-weight:700;}
+  .bw-summary-text{color:var(--muted);font-size:0.85rem;margin-bottom:6px;line-height:1.5;}
 </style>
 </head>
 <body>
@@ -230,6 +260,48 @@
       </div>
       <button class="secondary" id="saveBwBtn">Lagre vekt</button>
       <div id="bwChartWrap"></div>
+    </div>
+  </section>
+
+  <!-- FREMGANG -->
+  <section id="view-fremgang" class="hidden">
+    <div class="card" id="motivCard">
+      <div id="motivMsg" class="motiv-msg"></div>
+    </div>
+
+    <div class="stat-row" id="statRow"></div>
+
+    <div class="card">
+      <h2>Ukens mål</h2>
+      <div class="weekbar"><div class="weekbar-fill" id="weekbarFill" style="width:0%"></div></div>
+      <div class="weekbar-label" id="weekbarLabel"></div>
+      <div class="streak-line" id="streakLine"></div>
+    </div>
+
+    <div class="card">
+      <h2>Treningskonsistens</h2>
+      <div id="consistencyWrap"></div>
+      <div class="legend">
+        <span><span class="legend-dot legend-strength"></span>Styrke</span>
+        <span><span class="legend-dot legend-cardio"></span>Kondisjon</span>
+        <span><span class="legend-dot legend-empty"></span>Ingen</span>
+      </div>
+    </div>
+
+    <div class="card" id="prCard">
+      <h2>Personlige rekorder</h2>
+      <div id="prList"></div>
+    </div>
+
+    <div class="card" id="improveCard">
+      <h2>Størst fremgang</h2>
+      <div id="improveList"></div>
+    </div>
+
+    <div class="card" id="bwSummaryCard">
+      <h2>Kroppsvekt</h2>
+      <div id="bwSummaryText" class="bw-summary-text"></div>
+      <div id="bwSummaryChart"></div>
     </div>
   </section>
 
@@ -327,7 +399,8 @@
 
 <nav class="bottom">
   <button data-view="logg" class="active"><span class="ic">🏋️</span>Logg</button>
-  <button data-view="historikk"><span class="ic">📈</span>Historikk</button>
+  <button data-view="fremgang"><span class="ic">📈</span>Fremgang</button>
+  <button data-view="historikk"><span class="ic">🗓️</span>Historikk</button>
   <button data-view="program"><span class="ic">📋</span>Program</button>
   <button data-view="innstillinger"><span class="ic">⚙️</span>Innstillinger</button>
 </nav>
@@ -423,7 +496,7 @@
     return null;
   }
 
-  function exerciseProgressPoints(exerciseId){
+  function allExerciseProgressPoints(exerciseId){
     var points = [];
     data.sessions.forEach(function(s){
       var sets = s.entries && s.entries[exerciseId];
@@ -435,7 +508,19 @@
       }
     });
     points.sort(function(a,b){return a.date.localeCompare(b.date);});
-    return points.slice(-8);
+    return points;
+  }
+
+  function exerciseProgressPoints(exerciseId){
+    return allExerciseProgressPoints(exerciseId).slice(-8);
+  }
+
+  function exerciseNameById(exId){
+    for(var i=0;i<PROGRAM.length;i++){
+      var ex = PROGRAM[i].exercises.find(function(e){return e.id===exId;});
+      if(ex) return ex.name;
+    }
+    return exId;
   }
 
   function buildProgressChartHTML(points){
@@ -766,6 +851,247 @@
     renderHistory();
   }
 
+  // ---------- FREMGANG VIEW ----------
+  var WEEKLY_GOAL = 3;
+
+  function pad2(n){ return String(n).padStart(2,"0"); }
+
+  function dateStrToDate(s){
+    var p = s.split("-");
+    return new Date(+p[0], +p[1]-1, +p[2]);
+  }
+
+  function dateToStr(d){
+    return d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate());
+  }
+
+  function startOfWeek(dateObj){
+    var d = new Date(dateObj);
+    d.setHours(0,0,0,0);
+    var day = d.getDay();
+    var diff = (day===0 ? -6 : 1-day);
+    d.setDate(d.getDate()+diff);
+    return d;
+  }
+
+  function weeklySessionCounts(){
+    var map = {};
+    data.sessions.forEach(function(s){
+      var wk = dateToStr(startOfWeek(dateStrToDate(s.date)));
+      if(!map[wk]) map[wk] = {};
+      map[wk][s.date] = true;
+    });
+    var counts = {};
+    Object.keys(map).forEach(function(wk){ counts[wk] = Object.keys(map[wk]).length; });
+    return counts;
+  }
+
+  function currentWeekCount(){
+    var counts = weeklySessionCounts();
+    var wk = dateToStr(startOfWeek(new Date()));
+    return counts[wk] || 0;
+  }
+
+  function computeWeeklyStreak(){
+    var counts = weeklySessionCounts();
+    var cursor = startOfWeek(new Date());
+    var currentKey = dateToStr(cursor);
+    var streak = 0;
+    var key = currentKey;
+    while(true){
+      var cnt = counts[key] || 0;
+      var isCurrent = (key === currentKey);
+      if(cnt >= WEEKLY_GOAL){
+        streak++;
+      } else if(!isCurrent){
+        break;
+      }
+      cursor.setDate(cursor.getDate()-7);
+      key = dateToStr(cursor);
+      if(streak > 520) break;
+    }
+    return streak;
+  }
+
+  function daysSinceLastSession(){
+    if(!data.sessions.length) return null;
+    var last = data.sessions.slice().sort(function(a,b){return b.date.localeCompare(a.date);})[0].date;
+    return Math.floor((new Date(todayStr()) - dateStrToDate(last)) / 86400000);
+  }
+
+  function computeAllPRs(){
+    var result = {};
+    var sorted = data.sessions.slice().sort(function(a,b){return a.date.localeCompare(b.date);});
+    sorted.forEach(function(s){
+      Object.keys(s.entries).forEach(function(exId){
+        var weights = s.entries[exId].map(function(st){return st.weight;}).filter(function(w){return w!=null;});
+        if(!weights.length) return;
+        var top = Math.max.apply(null, weights);
+        if(!result[exId] || top > result[exId].weight){
+          result[exId] = {weight: top, date: s.date};
+        }
+      });
+    });
+    return result;
+  }
+
+  function mostImprovedExercises(limit){
+    var out = [];
+    var seen = {};
+    PROGRAM.forEach(function(day){
+      day.exercises.forEach(function(ex){
+        if(seen[ex.id]) return;
+        seen[ex.id] = true;
+        var pts = allExerciseProgressPoints(ex.id);
+        if(pts.length >= 2){
+          var delta = pts[pts.length-1].weight - pts[0].weight;
+          if(delta > 0){
+            out.push({name: ex.name, first: pts[0].weight, last: pts[pts.length-1].weight, delta: delta});
+          }
+        }
+      });
+    });
+    out.sort(function(a,b){ return b.delta - a.delta; });
+    return out.slice(0, limit);
+  }
+
+  function totalVolumeKg(){
+    var total = 0;
+    data.sessions.forEach(function(s){
+      Object.keys(s.entries).forEach(function(exId){
+        s.entries[exId].forEach(function(st){
+          if(st.weight!=null && st.reps!=null) total += st.weight * st.reps;
+        });
+      });
+    });
+    return Math.round(total);
+  }
+
+  function buildConsistencyGrid(weeksCount){
+    var today = new Date(); today.setHours(0,0,0,0);
+    var startMonday = startOfWeek(today);
+    startMonday.setDate(startMonday.getDate() - 7*(weeksCount-1));
+    var strengthDates = {};
+    data.sessions.forEach(function(s){ strengthDates[s.date] = true; });
+    var cardioDates = {};
+    data.cardio.forEach(function(c){ cardioDates[c.date] = true; });
+
+    var weeksHtml = "";
+    for(var w=0; w<weeksCount; w++){
+      var colStart = new Date(startMonday);
+      colStart.setDate(colStart.getDate() + 7*w);
+      var daysHtml = "";
+      for(var d=0; d<7; d++){
+        var day = new Date(colStart);
+        day.setDate(day.getDate()+d);
+        var key = dateToStr(day);
+        var cls;
+        if(day > today) cls = "grid-future";
+        else if(strengthDates[key]) cls = "grid-strength";
+        else if(cardioDates[key]) cls = "grid-cardio";
+        else cls = "grid-empty";
+        daysHtml += '<div class="grid-cell '+cls+'" title="'+key+'"></div>';
+      }
+      weeksHtml += '<div class="grid-col">'+daysHtml+'</div>';
+    }
+    return '<div class="grid-scroll"><div class="grid-rows">'+weeksHtml+'</div></div>';
+  }
+
+  function computeMotivationMessage(){
+    var prs = computeAllPRs();
+    var recentPr = null;
+    Object.keys(prs).forEach(function(exId){
+      var p = prs[exId];
+      var days = Math.floor((new Date(todayStr()) - dateStrToDate(p.date)) / 86400000);
+      if(days <= 7 && (!recentPr || p.date > recentPr.date)){
+        recentPr = {name: exerciseNameById(exId), weight: p.weight, date: p.date};
+      }
+    });
+
+    if(!data.sessions.length){
+      return "💪 Klar for din første økt? Alt starter med steg én.";
+    }
+    if(recentPr){
+      return "🏆 Ny personlig rekord på " + recentPr.name + ": " + recentPr.weight + " kg! Sterkt jobbet.";
+    }
+    var thisWeek = currentWeekCount();
+    var streak = computeWeeklyStreak();
+    if(thisWeek >= WEEKLY_GOAL){
+      return "🔥 Du har nådd ukens mål! " + (streak>1 ? streak+" uker på rad nå." : "Bra jobbet denne uken.");
+    }
+    if(thisWeek > 0){
+      return "👍 " + thisWeek + " av " + WEEKLY_GOAL + "-4 økter denne uken. Fortsett sånn!";
+    }
+    var gap = daysSinceLastSession();
+    if(gap!==null && gap>=10){
+      return "🌱 Det er en stund siden sist. Én økt er alt som skal til for å komme i gang igjen.";
+    }
+    return "📅 Ny uke, nytt mål. Få den første økten i boks!";
+  }
+
+  function renderFremgang(){
+    document.getElementById("motivMsg").textContent = computeMotivationMessage();
+
+    var totalSessions = data.sessions.length;
+    var prs = computeAllPRs();
+    var prCount = Object.keys(prs).length;
+    document.getElementById("statRow").innerHTML =
+      '<div class="stat-tile"><div class="stat-num">'+totalSessions+'</div><div class="stat-label">Økter totalt</div></div>'+
+      '<div class="stat-tile"><div class="stat-num">'+totalVolumeKg().toLocaleString("no-NO")+' kg</div><div class="stat-label">Løftet totalt</div></div>'+
+      '<div class="stat-tile"><div class="stat-num">'+prCount+'</div><div class="stat-label">Rekorder</div></div>';
+
+    var thisWeek = currentWeekCount();
+    var pct = Math.min(100, Math.round((thisWeek/WEEKLY_GOAL)*100));
+    document.getElementById("weekbarFill").style.width = pct+"%";
+    document.getElementById("weekbarLabel").textContent = thisWeek + " av " + WEEKLY_GOAL + "-4 økter denne uken";
+    var streak = computeWeeklyStreak();
+    document.getElementById("streakLine").textContent = streak>0
+      ? "🔥 " + streak + (streak===1 ? " uke" : " uker") + " på rad med minst " + WEEKLY_GOAL + " økter"
+      : "Nå ukens mål for å starte en ny rekke";
+
+    document.getElementById("consistencyWrap").innerHTML = buildConsistencyGrid(12);
+
+    var prList = document.getElementById("prList");
+    var prEntries = Object.keys(prs).map(function(exId){
+      return {exId: exId, name: exerciseNameById(exId), weight: prs[exId].weight, date: prs[exId].date};
+    }).sort(function(a,b){ return b.date.localeCompare(a.date); });
+    if(!prEntries.length){
+      prList.innerHTML = '<div class="empty">Ingen rekorder registrert enda. Logg din første økt for å starte.</div>';
+    } else {
+      prList.innerHTML = prEntries.map(function(p){
+        var isRecent = (new Date(todayStr()) - dateStrToDate(p.date)) / 86400000 <= 7;
+        return '<div class="pr-item"><span class="pr-name">'+p.name+'</span><span><span class="pr-val">'+p.weight+' kg</span>'+
+          (isRecent ? '<span class="pr-recent">NY</span>' : '')+'</span></div>';
+      }).join("");
+    }
+
+    var improveList = document.getElementById("improveList");
+    var improved = mostImprovedExercises(5);
+    if(!improved.length){
+      improveList.innerHTML = '<div class="empty">Trenger minst to økter på samme øvelse for å vise fremgang.</div>';
+    } else {
+      improveList.innerHTML = improved.map(function(i){
+        return '<div class="improve-item"><span>'+i.name+': '+i.first+' → '+i.last+' kg</span><span class="improve-delta">+'+i.delta+' kg</span></div>';
+      }).join("");
+    }
+
+    var bwPoints = bodyweightPoints();
+    var bwText = document.getElementById("bwSummaryText");
+    var bwChart = document.getElementById("bwSummaryChart");
+    if(bwPoints.length >= 2){
+      var diff = Math.round((bwPoints[bwPoints.length-1].weight - bwPoints[0].weight)*10)/10;
+      var diffText = diff===0 ? "uendret" : (diff>0 ? "+"+diff+" kg" : diff+" kg");
+      bwText.textContent = bwPoints[0].weight + " kg → " + bwPoints[bwPoints.length-1].weight + " kg (" + diffText + "). Husk: vekten kan stå stille selv om du blir sterkere og strammere, det er normalt.";
+      bwChart.innerHTML = buildProgressChartHTML(bwPoints);
+    } else if(bwPoints.length === 1){
+      bwText.textContent = "Kun én registrering enda (" + bwPoints[0].weight + " kg). Logg vekten ukentlig for å se en graf her.";
+      bwChart.innerHTML = "";
+    } else {
+      bwText.textContent = "Ingen kroppsvekt registrert enda.";
+      bwChart.innerHTML = "";
+    }
+  }
+
   // ---------- HISTORIKK VIEW ----------
   function renderHistory(){
     var list = document.getElementById("historyList");
@@ -974,13 +1300,14 @@
 
   // ---------- NAV ----------
   function switchView(viewName){
-    ["logg","historikk","program","innstillinger"].forEach(function(v){
+    ["logg","fremgang","historikk","program","innstillinger"].forEach(function(v){
       document.getElementById("view-"+v).classList.toggle("hidden", v!==viewName);
     });
     document.querySelectorAll("nav.bottom button").forEach(function(b){
       b.classList.toggle("active", b.dataset.view===viewName);
     });
     if(viewName==="historikk") renderHistory();
+    if(viewName==="fremgang") renderFremgang();
   }
 
   document.querySelectorAll("nav.bottom button").forEach(function(b){
