@@ -1473,7 +1473,7 @@
       .then(function(res){ return res.json().then(function(data){ return { ok: res.ok, data: data }; }); })
       .then(function(result){
         if(result.ok && result.data.ok){
-          showToast(result.data.pending ? "Sendt til Strava (behandles)…" : "Sendt til Strava!");
+          showToast("Sendt til Strava! Dukker opp om noen sekunder.");
         } else if(result.data && result.data.error === "not_connected"){
           showToast("Koble til Strava først (Innstillinger)");
         } else {

@@ -73,10 +73,6 @@ async function getFreshAccessToken(env){
   return data.access_token;
 }
 
-function sleep(ms){
-  return new Promise(function(resolve){ setTimeout(resolve, ms); });
-}
-
 // Norway follows EU DST rules: CEST (+2h) from the last Sunday of March
 // to the last Sunday of October, CET (+1h) otherwise. The app doesn't
 // track exact clock time, so this is only used for a reasonable midday
@@ -126,9 +122,19 @@ async function handleSendActivity(request, env){
     return jsonResponse({ error: e.message }, 401);
   }
 
+  // Time-of-day isn't tracked by the app, but reusing a fixed placeholder
+  // (e.g. always noon) makes every send for the same date+duration look
+  // like the same activity to Strava's duplicate detection, silently
+  // dropping later sends. Use the actual moment of sending instead —
+  // still the right calendar date, but never identical twice.
+  const now = new Date();
+  const sendTime = String(now.getUTCHours()).padStart(2, "0") + ":" +
+    String(now.getUTCMinutes()).padStart(2, "0") + ":" +
+    String(now.getUTCSeconds()).padStart(2, "0");
+
   const workoutJson = {
     version: "1.0",
-    start_time: date + "T11:00:00Z",
+    start_time: date + "T" + sendTime + "Z",
     utc_offset: osloUtcOffsetSeconds(date),
     elapsed_time: Math.round(elapsedMinutes * 60),
     creator: { name: "Treningslogg" },
@@ -140,12 +146,18 @@ async function handleSendActivity(request, env){
     })
   };
 
+  // external_id must be unique per upload — Strava treats a repeated
+  // external_id (which defaults to the file's name if not set) as a
+  // duplicate of a previous upload and won't create a new activity.
+  const externalId = "treningslogg-" + date + "-" + Date.now();
+
   const form = new FormData();
   form.append("data_type", "json");
   form.append("sport_type", "WeightTraining");
   form.append("name", name);
+  form.append("external_id", externalId);
   if(description) form.append("description", description);
-  form.append("file", new Blob([JSON.stringify(workoutJson)], { type: "application/json" }), "workout.json");
+  form.append("file", new Blob([JSON.stringify(workoutJson)], { type: "application/json" }), externalId + ".json");
 
   const uploadRes = await fetch("https://www.strava.com/api/v3/uploads", {
     method: "POST",
@@ -157,21 +169,31 @@ async function handleSendActivity(request, env){
     return jsonResponse({ error: "strava_upload_error", detail: uploadData }, 502);
   }
 
-  const uploadId = uploadData.id;
-  for(let i = 0; i < 8; i++){
-    await sleep(1500);
-    const pollRes = await fetch("https://www.strava.com/api/v3/uploads/" + uploadId, {
-      headers: { "Authorization": "Bearer " + accessToken }
-    });
-    const pollData = await pollRes.json();
-    if(pollData.error){
-      return jsonResponse({ error: "strava_processing_error", detail: pollData.error }, 502);
-    }
-    if(pollData.activity_id){
-      return jsonResponse({ ok: true, activityId: pollData.activity_id }, 200);
-    }
+  // Strava processes uploads asynchronously and it can take several
+  // seconds — don't hold the client's connection open waiting for it
+  // (mobile Safari/PWA drops long-running fetches). Respond immediately;
+  // the activity shows up on Strava shortly after.
+  return jsonResponse({ ok: true, pending: true, uploadId: uploadData.id }, 200);
+}
+
+async function handleUploadStatus(request, url, env){
+  const appToken = request.headers.get("X-App-Token");
+  if(!env.APP_TOKEN || appToken !== env.APP_TOKEN){
+    return jsonResponse({ error: "unauthorized" }, 401);
   }
-  return jsonResponse({ ok: true, pending: true, uploadId: uploadId }, 202);
+  const id = url.searchParams.get("id");
+  if(!id) return jsonResponse({ error: "missing_id" }, 400);
+  let accessToken;
+  try{
+    accessToken = await getFreshAccessToken(env);
+  }catch(e){
+    return jsonResponse({ error: e.message }, 401);
+  }
+  const res = await fetch("https://www.strava.com/api/v3/uploads/" + id, {
+    headers: { "Authorization": "Bearer " + accessToken }
+  });
+  const data = await res.json();
+  return jsonResponse(data, res.status);
 }
 
 async function handleStatus(env){
@@ -195,6 +217,9 @@ export default {
     }
     if(url.pathname === "/status" && request.method === "GET"){
       return handleStatus(env);
+    }
+    if(url.pathname === "/upload-status" && request.method === "GET"){
+      return handleUploadStatus(request, url, env);
     }
     return jsonResponse({ error: "not_found" }, 404);
   }
