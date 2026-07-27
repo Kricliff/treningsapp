@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<title>Treningslogg</title>
+<meta name="theme-color" content="#0f1115">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Trening">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>%F0%9F%92%AA</text></svg>">
+<style>
+  :root{
+    --bg:#0f1115;
+    --card:#1a1d24;
+    --card2:#20242d;
+    --border:#2a2f3a;
+    --text:#eef0f4;
+    --muted:#9099a8;
+    --accent:#2fd47a;
+    --accent-dim:#1e6b45;
+    --accent2:#4f8cff;
+    --danger:#ff5a5a;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;}
+  body{
+    padding-bottom:calc(78px + env(safe-area-inset-bottom));
+    padding-top:env(safe-area-inset-top);
+  }
+  .wrap{max-width:520px;margin:0 auto;padding:16px;}
+  header.app{
+    max-width:520px;margin:0 auto;padding:18px 16px 8px;
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  header.app h1{font-size:1.3rem;margin:0;}
+  header.app .sub{color:var(--muted);font-size:0.8rem;}
+  h2{font-size:1.05rem;margin:0 0 10px;color:var(--text);}
+  h3{font-size:0.95rem;margin:0 0 6px;}
+  .card{
+    background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+    padding:14px;margin-bottom:12px;
+  }
+  .daytabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:14px;}
+  .daytabs button{
+    flex:0 0 auto;background:var(--card);border:1px solid var(--border);color:var(--text);
+    padding:10px 14px;border-radius:999px;font-size:0.85rem;white-space:nowrap;
+  }
+  .daytabs button.active{background:var(--accent);color:#08130d;border-color:var(--accent);font-weight:600;}
+  .field-row{display:flex;gap:10px;align-items:center;margin-bottom:10px;}
+  label{font-size:0.8rem;color:var(--muted);}
+  input[type=date], input[type=text], input[type=number], select, textarea{
+    background:var(--card2);border:1px solid var(--border);color:var(--text);
+    border-radius:10px;padding:10px 12px;font-size:1rem;width:100%;
+  }
+  textarea{resize:vertical;min-height:50px;}
+  .exercise{border-top:1px solid var(--border);padding-top:12px;margin-top:12px;}
+  .exercise:first-child{border-top:none;padding-top:0;margin-top:0;}
+  .exercise-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;}
+  .exercise-head .name{font-weight:600;font-size:0.98rem;}
+  .exercise-head .target{color:var(--muted);font-size:0.78rem;white-space:nowrap;}
+  .badge{
+    display:inline-block;background:var(--accent-dim);color:var(--accent);
+    font-size:0.72rem;padding:2px 8px;border-radius:999px;margin-top:4px;
+  }
+  .cues{color:var(--muted);font-size:0.8rem;margin:6px 0 0;padding-left:18px;}
+  .cues li{margin-bottom:2px;}
+  details summary{color:var(--accent2);font-size:0.78rem;cursor:pointer;margin-top:6px;list-style:none;}
+  details summary::-webkit-details-marker{display:none;}
+  details summary:before{content:"Vis tips ";}
+  details[open] summary:before{content:"Skjul tips ";}
+  .sets{margin-top:10px;display:flex;flex-direction:column;gap:8px;}
+  .set-row{display:grid;grid-template-columns:28px 1fr 1fr;gap:8px;align-items:center;}
+  .set-row .setnum{color:var(--muted);font-size:0.85rem;text-align:center;}
+  .set-row input{text-align:center;}
+  .setbtns{display:flex;gap:8px;margin-top:8px;}
+  .smallbtn{
+    background:var(--card2);border:1px solid var(--border);color:var(--text);
+    padding:6px 12px;border-radius:8px;font-size:0.8rem;
+  }
+  .primary{
+    background:var(--accent);color:#08130d;font-weight:700;border:none;
+    padding:14px;border-radius:12px;font-size:1rem;width:100%;margin-top:6px;
+  }
+  .secondary{
+    background:var(--card2);color:var(--text);border:1px solid var(--border);
+    padding:12px;border-radius:12px;font-size:0.95rem;width:100%;
+  }
+  .danger{
+    background:transparent;color:var(--danger);border:1px solid var(--danger);
+    padding:10px;border-radius:10px;font-size:0.9rem;width:100%;
+  }
+  nav.bottom{
+    position:fixed;bottom:0;left:0;right:0;background:var(--card);
+    border-top:1px solid var(--border);display:flex;
+    padding-bottom:env(safe-area-inset-bottom);
+    z-index:50;
+  }
+  nav.bottom button{
+    flex:1;background:none;border:none;color:var(--muted);padding:10px 4px 8px;
+    font-size:0.68rem;display:flex;flex-direction:column;align-items:center;gap:2px;
+  }
+  nav.bottom button .ic{font-size:1.3rem;}
+  nav.bottom button.active{color:var(--accent);}
+  .hidden{display:none !important;}
+  .hist-item{border-bottom:1px solid var(--border);padding:10px 0;}
+  .hist-item:last-child{border-bottom:none;}
+  .hist-head{display:flex;justify-content:space-between;align-items:center;cursor:pointer;}
+  .hist-head .d{font-weight:600;}
+  .hist-head .t{color:var(--muted);font-size:0.8rem;}
+  .hist-detail{margin-top:8px;font-size:0.85rem;color:var(--muted);display:none;}
+  .hist-detail.open{display:block;}
+  .hist-detail table{width:100%;border-collapse:collapse;margin-bottom:8px;}
+  .hist-detail td{padding:2px 4px;}
+  .hist-detail .ex-name{color:var(--text);font-weight:600;}
+  .del-btn{color:var(--danger);font-size:0.75rem;background:none;border:none;padding:6px 0;}
+  .toast{
+    position:fixed;bottom:calc(90px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);
+    background:var(--accent);color:#08130d;padding:10px 18px;border-radius:999px;
+    font-size:0.85rem;font-weight:600;opacity:0;pointer-events:none;transition:opacity .25s;z-index:100;
+  }
+  .toast.show{opacity:1;}
+  .prog-section{margin-bottom:18px;}
+  .prog-section p{color:var(--muted);font-size:0.88rem;line-height:1.5;}
+  .prog-section ul{color:var(--muted);font-size:0.88rem;line-height:1.5;padding-left:20px;}
+  .empty{color:var(--muted);text-align:center;padding:30px 10px;font-size:0.9rem;}
+  select#cardioType{appearance:none;}
+  .filehint{color:var(--muted);font-size:0.75rem;margin-top:4px;}
+</style>
+</head>
+<body>
+
+<header class="app">
+  <div>
+    <h1>Treningslogg</h1>
+    <div class="sub">Muskelbygging &amp; fettforbrenning</div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- LOGG -->
+  <section id="view-logg">
+    <div class="daytabs" id="dayTabs"></div>
+
+    <div class="card">
+      <div class="field-row">
+        <div style="flex:1">
+          <label for="sessionDate">Dato</label>
+          <input type="date" id="sessionDate">
+        </div>
+      </div>
+      <div id="exerciseList"></div>
+      <div>
+        <label for="sessionNote">Notat (valgfritt)</label>
+        <textarea id="sessionNote" placeholder="Hvordan føltes økten?"></textarea>
+      </div>
+      <button class="primary" id="saveSessionBtn">Lagre økt</button>
+    </div>
+
+    <div class="card">
+      <h2>Kondisjon</h2>
+      <div class="field-row">
+        <div style="flex:1">
+          <label for="cardioDate">Dato</label>
+          <input type="date" id="cardioDate">
+        </div>
+      </div>
+      <div class="field-row">
+        <div style="flex:1">
+          <label for="cardioType">Type</label>
+          <select id="cardioType">
+            <option>Intervall</option>
+            <option>Rolig gange</option>
+            <option>Sykkel</option>
+            <option>Løping</option>
+            <option>Annet</option>
+          </select>
+        </div>
+        <div style="flex:1">
+          <label for="cardioMinutes">Minutter</label>
+          <input type="number" id="cardioMinutes" min="0" step="1" placeholder="20">
+        </div>
+      </div>
+      <div>
+        <label for="cardioNote">Notat (valgfritt)</label>
+        <input type="text" id="cardioNote" placeholder="F.eks. 8 runder 30/60 sek">
+      </div>
+      <button class="secondary" id="saveCardioBtn" style="margin-top:10px;">Lagre kondisjonsøkt</button>
+    </div>
+  </section>
+
+  <!-- HISTORIKK -->
+  <section id="view-historikk" class="hidden">
+    <div class="card">
+      <h2>Historikk</h2>
+      <div id="historyList"></div>
+    </div>
+  </section>
+
+  <!-- PROGRAM -->
+  <section id="view-program" class="hidden">
+    <div class="card prog-section">
+      <h2>Grunnprinsipper</h2>
+      <ul>
+        <li>Trening 3–4 dager i uken</li>
+        <li>Fokus på styrketrening i 8–12 repetisjoner</li>
+        <li>3–4 sett på store øvelser, 2–3 sett på mindre øvelser</li>
+        <li>Pauser: 60–90 sekunder</li>
+        <li>Tempo: løft kontrollert (1–2 sek), senk rolig (2–3 sek)</li>
+        <li>Juster vekten slik at de siste repetisjonene er tunge, men teknisk gode</li>
+      </ul>
+    </div>
+    <div class="card prog-section">
+      <h2>Ukesoppsett</h2>
+      <p><strong>4-dagers uke:</strong> Dag 1 Overkropp · Dag 2 Ben · Dag 3 Fri/lett kondisjon · Dag 4 Overkropp · Dag 5 Ben + intervall (valgfri)</p>
+      <p><strong>3-dagers uke:</strong> Dag 1 Overkropp · Dag 2 Ben · Dag 3 Overkropp + intervall</p>
+    </div>
+    <div id="programDays"></div>
+    <div class="card prog-section">
+      <h2>Kondisjon (fettforbrenning)</h2>
+      <ul>
+        <li>2–3 økter per uke</li>
+        <li>Maks 15–20 min intervall, eller 20–30 min rolig gange/sykkel</li>
+        <li>Unngå kondisjon før tunge beinøkter</li>
+      </ul>
+    </div>
+    <div class="card prog-section">
+      <h2>Progresjon</h2>
+      <ul>
+        <li>Når du klarer 12 reps i alle sett → øk vekten litt</li>
+        <li>Skriv ned vektene for hver økt</li>
+        <li>Små økninger er nok (0,5–5 kg)</li>
+      </ul>
+    </div>
+    <div class="card prog-section">
+      <h2>Kosthold</h2>
+      <ul>
+        <li>Protein: ca. 1,6–2 g per kg kroppsvekt</li>
+        <li>Spis rundt vedlikehold eller lett underskudd</li>
+        <li>Litt karbohydrater før og etter trening</li>
+        <li>Ikke kutt kalorier hardt, det stopper muskelbygging</li>
+      </ul>
+    </div>
+    <div class="card prog-section">
+      <h2>Hva du kan forvente</h2>
+      <ul>
+        <li>2–3 uker: sterkere, bedre kontakt i muskulaturen</li>
+        <li>4–6 uker: strammere kropp, klær sitter annerledes</li>
+        <li>Vekten kan stå stille, dette er normalt</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- INNSTILLINGER -->
+  <section id="view-innstillinger" class="hidden">
+    <div class="card">
+      <h2>Eksporter data</h2>
+      <p style="color:var(--muted);font-size:0.85rem;">Last ned all treningsdata som en fil. Bruk denne til å ta med data til en annen enhet, eller som backup.</p>
+      <button class="secondary" id="exportBtn">Eksporter til fil</button>
+    </div>
+    <div class="card">
+      <h2>Importer data</h2>
+      <p style="color:var(--muted);font-size:0.85rem;">Velg en tidligere eksportert fil. Økter slås sammen med det du allerede har lagret.</p>
+      <input type="file" id="importFile" accept="application/json">
+      <div class="filehint">Kun .json-filer eksportert fra denne appen.</div>
+    </div>
+    <div class="card">
+      <h2>Slett alt</h2>
+      <p style="color:var(--muted);font-size:0.85rem;">Fjerner all lagret treningsdata fra denne enheten permanent.</p>
+      <button class="danger" id="wipeBtn">Slett all data</button>
+    </div>
+  </section>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<nav class="bottom">
+  <button data-view="logg" class="active"><span class="ic">🏋️</span>Logg</button>
+  <button data-view="historikk"><span class="ic">📈</span>Historikk</button>
+  <button data-view="program"><span class="ic">📋</span>Program</button>
+  <button data-view="innstillinger"><span class="ic">⚙️</span>Innstillinger</button>
+</nav>
+
+<script>
+(function(){
+  "use strict";
+
+  var PROGRAM = [
+    { id:"dag1", name:"Dag 1 – Overkropp", full:"Dag 1 – Overkropp (styrke og forbrenning)", exercises:[
+      {id:"d1e1", name:"Brystpress (maskin)", sets:4, reps:"8-12", cues:["Still setet slik at håndtakene er på høyde med midt på brystet","Press håndtakene rett frem","Kontrollert tilbake"]},
+      {id:"d1e2", name:"Nedtrekk (lat pulldown)", sets:4, reps:"8-12", cues:["Trekk stangen ned mot øvre bryst","Brystet opp, skuldrene ned og bak"]},
+      {id:"d1e3", name:"Sittende roing (maskin)", sets:3, reps:"10-12", cues:["Trekk håndtaket inn mot magen","Klem skulderbladene sammen på toppen"]},
+      {id:"d1e4", name:"Skulderpress (maskin)", sets:3, reps:"8-10", cues:["Press håndtakene oppover","Unngå å låse albuene"]},
+      {id:"d1e5", name:"Face pull (kabel med tau)", sets:3, reps:"12-15", cues:["Trekk tauet mot ansiktet","Albuer høyt, fokus på bakside skuldre"]},
+      {id:"d1e6", name:"Triceps pushdown (kabel)", sets:3, reps:"10-12", cues:["Albuer tett inntil kroppen","Press helt ned, rolig opp igjen"]},
+      {id:"d1e7", name:"Pallof press (kabel)", sets:3, reps:"10-12 pr side", cues:["Stå sidevendt mot kabel","Press håndtaket rett frem","Motstå rotasjon"]}
+    ]},
+    { id:"dag2", name:"Dag 2 – Ben", full:"Dag 2 – Ben (stor muskel = høy forbrenning)", exercises:[
+      {id:"d2e1", name:"Beinpress", sets:4, reps:"8-12", cues:["Føtter skulderbredde på platen","Press opp uten å låse knærne"]},
+      {id:"d2e2", name:"Lårcurl (bakside lår)", sets:3, reps:"10-12", cues:["Bøy bena kontrollert bakover","Rolig tilbake"]},
+      {id:"d2e3", name:"Hack squat eller pendelmaskin", sets:3, reps:"8-10", cues:["Kontrollert ned og opp","Fokus på lår og sete"]},
+      {id:"d2e4", name:"Rygghev (maskin eller benk)", sets:3, reps:"10-15", cues:["Rett rygg","Senk rolig, løft kontrollert","Ingen rykk"]}
+    ]},
+    { id:"dag3", name:"Dag 3 – Overkropp", full:"Dag 3 – Overkropp (volum + armer)", exercises:[
+      {id:"d3e1", name:"Skrå brystpress (maskin)", sets:4, reps:"8-12", cues:["Samme prinsipper som vanlig brystpress"]},
+      {id:"d3e2", name:"Kabelroing (én arm eller begge)", sets:3, reps:"10-12", cues:["Trekk albuen bak","Stabil overkropp"]},
+      {id:"d3e3", name:"Sidehev (maskin eller kabel)", sets:3, reps:"12-15", cues:["Løft rolig ut til siden","Ikke bruk moment"]},
+      {id:"d3e4", name:"Bicepscurl (maskin eller kabel)", sets:3, reps:"10-12", cues:["Kontrollert opp og rolig ned"]},
+      {id:"d3e5", name:"Mageapparat eller kabelcrunch", sets:3, reps:"12-15", cues:["Rolig bevegelse","Fokus på pust og spenning"]}
+    ]},
+    { id:"dag4", name:"Dag 4 – Ben + intervall", full:"Dag 4 – Ben + intervall (valgfri)", exercises:[
+      {id:"d4e1", name:"Glute bridge / hip thrust-maskin", sets:3, reps:"10", cues:[]},
+      {id:"d4e2", name:"Abductor (utside hofte)", sets:3, reps:"12-15", cues:[]},
+      {id:"d4e3", name:"Rygghev (lett versjon)", sets:2, reps:"12-15", cues:["Fokus på kontroll, ikke tyngde"]}
+    ]}
+  ];
+
+  var STORAGE_KEY = "treningslogg_v1";
+
+  function loadData(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return {sessions:[], cardio:[]};
+      var parsed = JSON.parse(raw);
+      if(!parsed.sessions) parsed.sessions = [];
+      if(!parsed.cardio) parsed.cardio = [];
+      return parsed;
+    }catch(e){
+      console.error("Kunne ikke lese lagret data", e);
+      return {sessions:[], cardio:[]};
+    }
+  }
+  function saveData(data){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }
+
+  var data = loadData();
+  var currentDayId = PROGRAM[0].id;
+
+  function todayStr(){
+    var d = new Date();
+    var m = String(d.getMonth()+1).padStart(2,"0");
+    var day = String(d.getDate()).padStart(2,"0");
+    return d.getFullYear() + "-" + m + "-" + day;
+  }
+
+  function uid(){
+    return Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+  }
+
+  function repsUpperBound(reps){
+    var m = reps.match(/(\d+)(?!.*\d)/);
+    return m ? parseInt(m[1],10) : null;
+  }
+
+  function getDay(dayId){
+    for(var i=0;i<PROGRAM.length;i++) if(PROGRAM[i].id===dayId) return PROGRAM[i];
+    return PROGRAM[0];
+  }
+
+  function lastEntryForExercise(exerciseId){
+    var sessions = data.sessions.slice().sort(function(a,b){return b.date.localeCompare(a.date) || (b.createdAt-a.createdAt);});
+    for(var i=0;i<sessions.length;i++){
+      var s = sessions[i];
+      if(s.entries && s.entries[exerciseId] && s.entries[exerciseId].length){
+        return s.entries[exerciseId];
+      }
+    }
+    return null;
+  }
+
+  // ---------- LOGG VIEW ----------
+  function renderDayTabs(){
+    var el = document.getElementById("dayTabs");
+    el.innerHTML = "";
+    PROGRAM.forEach(function(day){
+      var btn = document.createElement("button");
+      btn.textContent = day.name;
+      if(day.id===currentDayId) btn.className = "active";
+      btn.addEventListener("click", function(){
+        currentDayId = day.id;
+        renderDayTabs();
+        renderExerciseList();
+      });
+      el.appendChild(btn);
+    });
+  }
+
+  function makeSetRow(setIndex, exerciseId, prevSets){
+    var row = document.createElement("div");
+    row.className = "set-row";
+    row.dataset.setIndex = setIndex;
+
+    var num = document.createElement("div");
+    num.className = "setnum";
+    num.textContent = (setIndex+1);
+    row.appendChild(num);
+
+    var w = document.createElement("input");
+    w.type = "number"; w.step = "0.5"; w.min="0"; w.className="weight-input";
+    w.placeholder = "kg";
+    if(prevSets && prevSets[setIndex]) w.placeholder = prevSets[setIndex].weight + " kg";
+    row.appendChild(w);
+
+    var r = document.createElement("input");
+    r.type = "number"; r.min="0"; r.className="reps-input";
+    r.placeholder = "reps";
+    if(prevSets && prevSets[setIndex]) r.placeholder = prevSets[setIndex].reps + " reps";
+    row.appendChild(r);
+
+    return row;
+  }
+
+  function renderExerciseList(){
+    var day = getDay(currentDayId);
+    var container = document.getElementById("exerciseList");
+    container.innerHTML = "";
+
+    day.exercises.forEach(function(ex){
+      var wrap = document.createElement("div");
+      wrap.className = "exercise";
+      wrap.dataset.exerciseId = ex.id;
+
+      var prev = lastEntryForExercise(ex.id);
+      var upper = repsUpperBound(ex.reps);
+      var suggestUp = false;
+      if(prev && upper){
+        suggestUp = prev.every(function(s){ return parseInt(s.reps,10) >= upper; }) && prev.length>0;
+      }
+
+      var head = document.createElement("div");
+      head.className = "exercise-head";
+      head.innerHTML = '<div><div class="name">'+ex.name+'</div>'+
+        (suggestUp ? '<span class="badge">🔼 Vurder å øke vekten</span>' : '') +
+        '</div><div class="target">'+ex.sets+' × '+ex.reps+'</div>';
+      wrap.appendChild(head);
+
+      if(ex.cues && ex.cues.length){
+        var det = document.createElement("details");
+        var sum = document.createElement("summary");
+        det.appendChild(sum);
+        var ul = document.createElement("ul");
+        ul.className = "cues";
+        ex.cues.forEach(function(c){
+          var li = document.createElement("li");
+          li.textContent = c;
+          ul.appendChild(li);
+        });
+        det.appendChild(ul);
+        wrap.appendChild(det);
+      }
+
+      var setsWrap = document.createElement("div");
+      setsWrap.className = "sets";
+      var numSets = ex.sets;
+      for(var i=0;i<numSets;i++){
+        setsWrap.appendChild(makeSetRow(i, ex.id, prev));
+      }
+      wrap.appendChild(setsWrap);
+
+      var btns = document.createElement("div");
+      btns.className = "setbtns";
+      var addBtn = document.createElement("button");
+      addBtn.className = "smallbtn"; addBtn.type="button";
+      addBtn.textContent = "+ sett";
+      addBtn.addEventListener("click", function(){
+        var idx = setsWrap.children.length;
+        setsWrap.appendChild(makeSetRow(idx, ex.id, prev));
+      });
+      var rmBtn = document.createElement("button");
+      rmBtn.className = "smallbtn"; rmBtn.type="button";
+      rmBtn.textContent = "- sett";
+      rmBtn.addEventListener("click", function(){
+        if(setsWrap.children.length>1) setsWrap.removeChild(setsWrap.lastChild);
+      });
+      btns.appendChild(addBtn);
+      btns.appendChild(rmBtn);
+      wrap.appendChild(btns);
+
+      container.appendChild(wrap);
+    });
+  }
+
+  function showToast(msg){
+    var t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    setTimeout(function(){ t.classList.remove("show"); }, 1800);
+  }
+
+  function saveSession(){
+    var day = getDay(currentDayId);
+    var dateVal = document.getElementById("sessionDate").value || todayStr();
+    var note = document.getElementById("sessionNote").value.trim();
+    var entries = {};
+    var anyData = false;
+
+    document.querySelectorAll("#exerciseList .exercise").forEach(function(exEl){
+      var exId = exEl.dataset.exerciseId;
+      var sets = [];
+      exEl.querySelectorAll(".set-row").forEach(function(row){
+        var weight = row.querySelector(".weight-input").value;
+        var reps = row.querySelector(".reps-input").value;
+        if(weight!=="" || reps!==""){
+          sets.push({weight: weight!==""?parseFloat(weight):null, reps: reps!==""?parseInt(reps,10):null});
+          anyData = true;
+        }
+      });
+      if(sets.length) entries[exId] = sets;
+    });
+
+    if(!anyData){
+      showToast("Fyll inn minst ett sett først");
+      return;
+    }
+
+    data.sessions.push({
+      id: uid(),
+      date: dateVal,
+      dayId: day.id,
+      dayName: day.full,
+      entries: entries,
+      note: note,
+      createdAt: Date.now()
+    });
+    saveData(data);
+    showToast("Økt lagret!");
+    document.getElementById("sessionNote").value = "";
+    renderExerciseList();
+    renderHistory();
+  }
+
+  function saveCardio(){
+    var dateVal = document.getElementById("cardioDate").value || todayStr();
+    var type = document.getElementById("cardioType").value;
+    var minutes = document.getElementById("cardioMinutes").value;
+    var note = document.getElementById("cardioNote").value.trim();
+    if(!minutes){
+      showToast("Fyll inn antall minutter");
+      return;
+    }
+    data.cardio.push({
+      id: uid(), date: dateVal, type: type, minutes: parseInt(minutes,10), note: note, createdAt: Date.now()
+    });
+    saveData(data);
+    showToast("Kondisjonsøkt lagret!");
+    document.getElementById("cardioMinutes").value = "";
+    document.getElementById("cardioNote").value = "";
+    renderHistory();
+  }
+
+  // ---------- HISTORIKK VIEW ----------
+  function renderHistory(){
+    var list = document.getElementById("historyList");
+    list.innerHTML = "";
+
+    var items = [];
+    data.sessions.forEach(function(s){ items.push({type:"strength", data:s}); });
+    data.cardio.forEach(function(c){ items.push({type:"cardio", data:c}); });
+    items.sort(function(a,b){
+      if(a.data.date !== b.data.date) return b.data.date.localeCompare(a.data.date);
+      return (b.data.createdAt||0) - (a.data.createdAt||0);
+    });
+
+    if(!items.length){
+      list.innerHTML = '<div class="empty">Ingen økter lagret enda. Logg din første økt under "Logg".</div>';
+      return;
+    }
+
+    items.forEach(function(item){
+      var el = document.createElement("div");
+      el.className = "hist-item";
+
+      var head = document.createElement("div");
+      head.className = "hist-head";
+
+      if(item.type==="strength"){
+        var s = item.data;
+        head.innerHTML = '<div><div class="d">'+s.dayName+'</div><div class="t">'+s.date+'</div></div><div>▾</div>';
+      } else {
+        var c = item.data;
+        head.innerHTML = '<div><div class="d">Kondisjon: '+c.type+'</div><div class="t">'+c.date+' · '+c.minutes+' min</div></div><div>▾</div>';
+      }
+      el.appendChild(head);
+
+      var detail = document.createElement("div");
+      detail.className = "hist-detail";
+
+      if(item.type==="strength"){
+        var s2 = item.data;
+        var day = getDay(s2.dayId) || null;
+        var table = document.createElement("table");
+        Object.keys(s2.entries).forEach(function(exId){
+          var exMeta = day ? day.exercises.find(function(e){return e.id===exId;}) : null;
+          var exName = exMeta ? exMeta.name : exId;
+          var sets = s2.entries[exId];
+          var setsStr = sets.map(function(st){
+            return (st.weight!=null?st.weight+"kg":"-") + " × " + (st.reps!=null?st.reps:"-");
+          }).join(", ");
+          var tr = document.createElement("tr");
+          tr.innerHTML = '<td class="ex-name">'+exName+'</td><td>'+setsStr+'</td>';
+          table.appendChild(tr);
+        });
+        detail.appendChild(table);
+        if(s2.note){
+          var p = document.createElement("div");
+          p.style.marginBottom = "8px";
+          p.textContent = "Notat: " + s2.note;
+          detail.appendChild(p);
+        }
+      } else {
+        var c2 = item.data;
+        if(c2.note){
+          var p2 = document.createElement("div");
+          p2.style.marginBottom = "8px";
+          p2.textContent = "Notat: " + c2.note;
+          detail.appendChild(p2);
+        }
+      }
+
+      var delBtn = document.createElement("button");
+      delBtn.className = "del-btn";
+      delBtn.textContent = "Slett denne økten";
+      delBtn.addEventListener("click", function(ev){
+        ev.stopPropagation();
+        if(confirm("Slette denne økten permanent?")){
+          if(item.type==="strength"){
+            data.sessions = data.sessions.filter(function(s){return s.id!==item.data.id;});
+          } else {
+            data.cardio = data.cardio.filter(function(c){return c.id!==item.data.id;});
+          }
+          saveData(data);
+          renderHistory();
+          renderExerciseList();
+        }
+      });
+      detail.appendChild(delBtn);
+
+      head.addEventListener("click", function(){
+        detail.classList.toggle("open");
+      });
+
+      el.appendChild(detail);
+      list.appendChild(el);
+    });
+  }
+
+  // ---------- PROGRAM VIEW ----------
+  function renderProgramDays(){
+    var container = document.getElementById("programDays");
+    container.innerHTML = "";
+    PROGRAM.forEach(function(day){
+      var card = document.createElement("div");
+      card.className = "card prog-section";
+      var h = document.createElement("h2");
+      h.textContent = day.full;
+      card.appendChild(h);
+      day.exercises.forEach(function(ex, idx){
+        var exDiv = document.createElement("div");
+        exDiv.style.marginBottom = "10px";
+        var title = document.createElement("div");
+        title.innerHTML = '<strong>'+(idx+1)+'. '+ex.name+'</strong> — '+ex.sets+' × '+ex.reps;
+        exDiv.appendChild(title);
+        if(ex.cues.length){
+          var ul = document.createElement("ul");
+          ex.cues.forEach(function(c){
+            var li = document.createElement("li");
+            li.textContent = c;
+            ul.appendChild(li);
+          });
+          exDiv.appendChild(ul);
+        }
+        card.appendChild(exDiv);
+      });
+      if(day.id==="dag4"){
+        var intervalDiv = document.createElement("div");
+        intervalDiv.innerHTML = '<strong>Intervall (10-15 min):</strong>';
+        var ul2 = document.createElement("ul");
+        ["30 sek rask gange, løp eller sykkel","60 sek rolig tempo","Gjenta 8-10 runder"].forEach(function(c){
+          var li = document.createElement("li");
+          li.textContent = c;
+          ul2.appendChild(li);
+        });
+        intervalDiv.appendChild(ul2);
+        card.appendChild(intervalDiv);
+      }
+      container.appendChild(card);
+    });
+  }
+
+  // ---------- INNSTILLINGER ----------
+  function exportData(){
+    var blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = "treningslogg-" + todayStr() + ".json";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast("Eksportert!");
+  }
+
+  function importData(file){
+    var reader = new FileReader();
+    reader.onload = function(e){
+      try{
+        var imported = JSON.parse(e.target.result);
+        var existingIds = {};
+        data.sessions.forEach(function(s){ existingIds[s.id]=true; });
+        (imported.sessions||[]).forEach(function(s){
+          if(!existingIds[s.id]) data.sessions.push(s);
+        });
+        var existingCardioIds = {};
+        data.cardio.forEach(function(c){ existingCardioIds[c.id]=true; });
+        (imported.cardio||[]).forEach(function(c){
+          if(!existingCardioIds[c.id]) data.cardio.push(c);
+        });
+        saveData(data);
+        renderHistory();
+        renderExerciseList();
+        showToast("Import fullført!");
+      }catch(err){
+        alert("Kunne ikke lese filen. Er det en gyldig eksportfil fra denne appen?");
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  function wipeAll(){
+    if(confirm("Sikker på at du vil slette ALL treningsdata fra denne enheten? Dette kan ikke angres.")){
+      data = {sessions:[], cardio:[]};
+      saveData(data);
+      renderHistory();
+      renderExerciseList();
+      showToast("All data slettet");
+    }
+  }
+
+  // ---------- NAV ----------
+  function switchView(viewName){
+    ["logg","historikk","program","innstillinger"].forEach(function(v){
+      document.getElementById("view-"+v).classList.toggle("hidden", v!==viewName);
+    });
+    document.querySelectorAll("nav.bottom button").forEach(function(b){
+      b.classList.toggle("active", b.dataset.view===viewName);
+    });
+    if(viewName==="historikk") renderHistory();
+  }
+
+  document.querySelectorAll("nav.bottom button").forEach(function(b){
+    b.addEventListener("click", function(){ switchView(b.dataset.view); });
+  });
+
+  document.getElementById("saveSessionBtn").addEventListener("click", saveSession);
+  document.getElementById("saveCardioBtn").addEventListener("click", saveCardio);
+  document.getElementById("exportBtn").addEventListener("click", exportData);
+  document.getElementById("wipeBtn").addEventListener("click", wipeAll);
+  document.getElementById("importFile").addEventListener("change", function(e){
+    if(e.target.files && e.target.files[0]) importData(e.target.files[0]);
+    e.target.value = "";
+  });
+
+  document.getElementById("sessionDate").value = todayStr();
+  document.getElementById("cardioDate").value = todayStr();
+
+  renderDayTabs();
+  renderExerciseList();
+  renderProgramDays();
+  renderHistory();
+})();
+</script>
+</body>
+</html>
