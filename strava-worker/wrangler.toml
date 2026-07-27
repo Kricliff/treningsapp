@@ -1,0 +1,10 @@
+name = "treningsapp-strava"
+main = "src/index.js"
+compatibility_date = "2024-11-01"
+
+[vars]
+STRAVA_CLIENT_ID = "REPLACE_WITH_CLIENT_ID"
+
+[[kv_namespaces]]
+binding = "STRAVA_KV"
+id = "REPLACE_WITH_KV_ID"

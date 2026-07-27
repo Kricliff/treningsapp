@@ -123,6 +123,7 @@
   .hist-detail td{padding:2px 4px;}
   .hist-detail .ex-name{color:var(--text);font-weight:600;}
   .del-btn{color:var(--danger);font-size:0.75rem;background:none;border:none;padding:6px 0;}
+  .strava-btn{color:#fc4c02;font-size:0.75rem;background:none;border:none;padding:6px 0;display:block;font-weight:600;}
   .toast{
     position:fixed;bottom:calc(90px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);
     background:var(--accent);color:#08130d;padding:10px 18px;border-radius:999px;
@@ -451,6 +452,12 @@
   <!-- INNSTILLINGER -->
   <section id="view-innstillinger" class="hidden">
     <div class="card">
+      <h2>Strava</h2>
+      <p id="stravaStatusText" style="color:var(--muted);font-size:0.85rem;">Sjekker tilkobling…</p>
+      <a id="stravaConnectBtn" class="secondary" style="display:block;text-align:center;text-decoration:none;box-sizing:border-box;">Koble til Strava</a>
+      <div class="filehint">Økter sendes manuelt via «Send til Strava» i Historikk. Strava får kun et sammendrag (øvelser/vekter/reps som tekst), ikke selve treningsloggen.</div>
+    </div>
+    <div class="card">
       <h2>Eksporter data</h2>
       <p style="color:var(--muted);font-size:0.85rem;">Last ned all treningsdata som en fil. Bruk denne til å ta med data til en annen enhet, eller som backup.</p>
       <button class="secondary" id="exportBtn">Eksporter til fil</button>
@@ -524,6 +531,15 @@
   ];
 
   var STORAGE_KEY = "treningslogg_v1";
+
+  var STRAVA_CONFIG = {
+    clientId: "REPLACE_WITH_CLIENT_ID",
+    workerUrl: "REPLACE_WITH_WORKER_URL",
+    appToken: "7d16c8f95595ea2c02ef9eee584e554209e9ff0a67b632f0"
+  };
+  function stravaConfigured(){
+    return STRAVA_CONFIG.clientId.indexOf("REPLACE") !== 0 && STRAVA_CONFIG.workerUrl.indexOf("REPLACE") !== 0;
+  }
 
   function loadData(){
     try{
@@ -1264,6 +1280,18 @@
         }
       }
 
+      if(item.type==="strength"){
+        var stravaBtn = document.createElement("button");
+        stravaBtn.className = "strava-btn";
+        stravaBtn.type = "button";
+        stravaBtn.textContent = "Send til Strava";
+        stravaBtn.addEventListener("click", function(ev){
+          ev.stopPropagation();
+          sendSessionToStrava(item.data);
+        });
+        detail.appendChild(stravaBtn);
+      }
+
       var delBtn = document.createElement("button");
       delBtn.className = "del-btn";
       delBtn.textContent = "Slett denne økten";
@@ -1353,6 +1381,95 @@
     });
   }
 
+  // ---------- STRAVA ----------
+  function stravaAuthUrl(){
+    return "https://www.strava.com/oauth/authorize?client_id=" + encodeURIComponent(STRAVA_CONFIG.clientId) +
+      "&redirect_uri=" + encodeURIComponent(STRAVA_CONFIG.workerUrl + "/callback") +
+      "&response_type=code&approval_prompt=auto&scope=activity:write";
+  }
+
+  function refreshStravaStatus(){
+    var statusEl = document.getElementById("stravaStatusText");
+    var connectBtn = document.getElementById("stravaConnectBtn");
+    if(!stravaConfigured()){
+      statusEl.textContent = "Ikke satt opp enda.";
+      connectBtn.textContent = "Koble til Strava";
+      connectBtn.removeAttribute("href");
+      return;
+    }
+    connectBtn.href = stravaAuthUrl();
+    connectBtn.target = "_blank";
+    connectBtn.rel = "noopener";
+    fetch(STRAVA_CONFIG.workerUrl + "/status")
+      .then(function(res){ return res.json(); })
+      .then(function(data){
+        if(data.connected){
+          statusEl.textContent = "Koblet til" + (data.athlete ? " som " + data.athlete : "") + ".";
+          connectBtn.textContent = "Koble til på nytt";
+        } else {
+          statusEl.textContent = "Ikke koblet til enda.";
+          connectBtn.textContent = "Koble til Strava";
+        }
+      })
+      .catch(function(){
+        statusEl.textContent = "Fikk ikke kontakt med Strava-tjenesten.";
+      });
+  }
+
+  function buildStravaDescription(session){
+    var day = getDay(session.dayId);
+    var lines = [];
+    Object.keys(session.entries).forEach(function(exId){
+      var exMeta = day ? day.exercises.find(function(e){ return e.id === exId; }) : null;
+      var exName = exMeta ? exMeta.name : exId;
+      var sets = session.entries[exId];
+      var setsStr = sets.map(function(st){
+        return (st.weight != null ? st.weight + "kg" : "-") + "x" + (st.reps != null ? st.reps : "-");
+      }).join(", ");
+      lines.push(exName + ": " + setsStr);
+    });
+    if(session.note) lines.push("Notat: " + session.note);
+    return lines.join("\n");
+  }
+
+  function sendSessionToStrava(session){
+    if(!stravaConfigured()){
+      showToast("Strava er ikke satt opp enda");
+      return;
+    }
+    var minutesStr = prompt("Hvor mange minutter varte økten omtrent?", "60");
+    if(!minutesStr) return;
+    var minutes = parseFloat(minutesStr);
+    if(!minutes || minutes <= 0){
+      showToast("Ugyldig varighet");
+      return;
+    }
+    var day = getDay(session.dayId);
+    var name = day ? day.full : session.dayName;
+    var description = buildStravaDescription(session);
+
+    fetch(STRAVA_CONFIG.workerUrl + "/send-activity", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-App-Token": STRAVA_CONFIG.appToken },
+      body: JSON.stringify({ name: name, date: session.date, elapsedMinutes: minutes, description: description })
+    })
+      .then(function(res){ return res.json().then(function(data){ return { ok: res.ok, data: data }; }); })
+      .then(function(result){
+        if(result.ok && result.data.ok){
+          showToast("Sendt til Strava!");
+        } else if(result.data && result.data.error === "not_connected"){
+          showToast("Koble til Strava først (Innstillinger)");
+        } else {
+          showToast("Feil ved sending til Strava");
+          console.error(result.data);
+        }
+      })
+      .catch(function(e){
+        showToast("Kunne ikke nå Strava-tjenesten");
+        console.error(e);
+      });
+  }
+
   // ---------- INNSTILLINGER ----------
   function exportData(){
     var blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
@@ -1422,6 +1539,7 @@
     });
     if(viewName==="historikk") renderHistory();
     if(viewName==="fremgang") renderFremgang();
+    if(viewName==="innstillinger") refreshStravaStatus();
   }
 
   document.querySelectorAll("nav.bottom button").forEach(function(b){
