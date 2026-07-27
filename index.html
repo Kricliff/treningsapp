@@ -147,6 +147,11 @@
   }
   #restBar.show{display:flex;}
   #restBar button{background:rgba(8,19,13,0.15);color:#08130d;border:none;border-radius:8px;padding:6px 12px;font-size:0.85rem;font-weight:600;}
+  .reminder-banner{
+    background:var(--accent-dim);border:1px solid var(--accent);color:var(--accent);
+    border-radius:var(--radius);padding:12px 14px;margin-bottom:14px;
+    font-size:0.85rem;font-weight:600;display:flex;align-items:center;gap:8px;cursor:pointer;
+  }
 </style>
 </head>
 <body>
@@ -162,6 +167,7 @@
 
   <!-- LOGG -->
   <section id="view-logg">
+    <div id="bodyweightReminder" class="reminder-banner hidden"></div>
     <div class="daytabs" id="dayTabs"></div>
 
     <div class="card">
@@ -208,6 +214,22 @@
         <input type="text" id="cardioNote" placeholder="F.eks. 8 runder 30/60 sek">
       </div>
       <button class="secondary" id="saveCardioBtn" style="margin-top:10px;">Lagre kondisjonsøkt</button>
+    </div>
+
+    <div class="card">
+      <h2>Kroppsvekt</h2>
+      <div class="field-row">
+        <div style="flex:1">
+          <label for="bwDate">Dato</label>
+          <input type="date" id="bwDate">
+        </div>
+        <div style="flex:1">
+          <label for="bwWeight">Vekt (kg)</label>
+          <input type="number" id="bwWeight" step="0.1" min="0" placeholder="kg">
+        </div>
+      </div>
+      <button class="secondary" id="saveBwBtn">Lagre vekt</button>
+      <div id="bwChartWrap"></div>
     </div>
   </section>
 
@@ -351,14 +373,15 @@
   function loadData(){
     try{
       var raw = localStorage.getItem(STORAGE_KEY);
-      if(!raw) return {sessions:[], cardio:[]};
+      if(!raw) return {sessions:[], cardio:[], bodyweight:[]};
       var parsed = JSON.parse(raw);
       if(!parsed.sessions) parsed.sessions = [];
       if(!parsed.cardio) parsed.cardio = [];
+      if(!parsed.bodyweight) parsed.bodyweight = [];
       return parsed;
     }catch(e){
       console.error("Kunne ikke lese lagret data", e);
-      return {sessions:[], cardio:[]};
+      return {sessions:[], cardio:[], bodyweight:[]};
     }
   }
   function saveData(data){
@@ -427,6 +450,68 @@
         '<div class="chart-bar" style="height:'+pct+'%"></div>'+
         '<div class="chart-bar-label">'+dm+'</div></div>';
     }).join("") + '</div>';
+  }
+
+  // ---------- KROPPSVEKT ----------
+  function bodyweightPoints(){
+    var points = data.bodyweight.map(function(b){ return {date:b.date, weight:b.weight}; });
+    points.sort(function(a,b){return a.date.localeCompare(b.date);});
+    return points.slice(-12);
+  }
+
+  function daysSinceLastBodyweight(){
+    if(!data.bodyweight.length) return null;
+    var last = data.bodyweight.slice().sort(function(a,b){return b.date.localeCompare(a.date);})[0].date;
+    var diffMs = new Date(todayStr()) - new Date(last);
+    return Math.floor(diffMs / 86400000);
+  }
+
+  function renderBodyweightReminder(){
+    var el = document.getElementById("bodyweightReminder");
+    var days = daysSinceLastBodyweight();
+    if(days===null){
+      el.textContent = "📅 Du har ikke registrert kroppsvekt enda. Start ukentlig oppfølging under.";
+      el.classList.remove("hidden");
+    } else if(days>=7){
+      el.textContent = "📅 Det er " + days + " dager siden sist du veide deg. Registrer vekten under.";
+      el.classList.remove("hidden");
+    } else {
+      el.classList.add("hidden");
+    }
+  }
+
+  function renderBodyweightSection(){
+    var wrap = document.getElementById("bwChartWrap");
+    var points = bodyweightPoints();
+    if(points.length){
+      wrap.innerHTML = '<details class="progress-toggle"><summary></summary>' + buildProgressChartHTML(points) + '</details>';
+      document.getElementById("bwWeight").placeholder = points[points.length-1].weight + " kg";
+    } else {
+      wrap.innerHTML = "";
+      document.getElementById("bwWeight").placeholder = "kg";
+    }
+  }
+
+  function saveBodyweight(){
+    var dateVal = document.getElementById("bwDate").value || todayStr();
+    var weightVal = document.getElementById("bwWeight").value;
+    if(weightVal===""){
+      showToast("Fyll inn vekt først");
+      return;
+    }
+    var weight = parseFloat(weightVal);
+    var existing = data.bodyweight.find(function(b){ return b.date===dateVal; });
+    if(existing){
+      existing.weight = weight;
+    } else {
+      data.bodyweight.push({id:uid(), date:dateVal, weight:weight, createdAt:Date.now()});
+    }
+    saveData(data);
+    showToast("Vekt lagret!");
+    document.getElementById("bwWeight").value = "";
+    renderBodyweightReminder();
+    renderBodyweightSection();
+    renderHistory();
   }
 
   // ---------- HVILETIMER ----------
@@ -689,6 +774,7 @@
     var items = [];
     data.sessions.forEach(function(s){ items.push({type:"strength", data:s}); });
     data.cardio.forEach(function(c){ items.push({type:"cardio", data:c}); });
+    data.bodyweight.forEach(function(b){ items.push({type:"bodyweight", data:b}); });
     items.sort(function(a,b){
       if(a.data.date !== b.data.date) return b.data.date.localeCompare(a.data.date);
       return (b.data.createdAt||0) - (a.data.createdAt||0);
@@ -709,9 +795,12 @@
       if(item.type==="strength"){
         var s = item.data;
         head.innerHTML = '<div><div class="d">'+s.dayName+'</div><div class="t">'+s.date+'</div></div><div>▾</div>';
-      } else {
+      } else if(item.type==="cardio"){
         var c = item.data;
         head.innerHTML = '<div><div class="d">Kondisjon: '+c.type+'</div><div class="t">'+c.date+' · '+c.minutes+' min</div></div><div>▾</div>';
+      } else {
+        var b = item.data;
+        head.innerHTML = '<div><div class="d">Kroppsvekt: '+b.weight+' kg</div><div class="t">'+b.date+'</div></div><div>▾</div>';
       }
       el.appendChild(head);
 
@@ -740,7 +829,7 @@
           p.textContent = "Notat: " + s2.note;
           detail.appendChild(p);
         }
-      } else {
+      } else if(item.type==="cardio"){
         var c2 = item.data;
         if(c2.note){
           var p2 = document.createElement("div");
@@ -758,12 +847,16 @@
         if(confirm("Slette denne økten permanent?")){
           if(item.type==="strength"){
             data.sessions = data.sessions.filter(function(s){return s.id!==item.data.id;});
-          } else {
+          } else if(item.type==="cardio"){
             data.cardio = data.cardio.filter(function(c){return c.id!==item.data.id;});
+          } else {
+            data.bodyweight = data.bodyweight.filter(function(b){return b.id!==item.data.id;});
           }
           saveData(data);
           renderHistory();
           renderExerciseList();
+          renderBodyweightReminder();
+          renderBodyweightSection();
         }
       });
       detail.appendChild(delBtn);
@@ -849,9 +942,16 @@
         (imported.cardio||[]).forEach(function(c){
           if(!existingCardioIds[c.id]) data.cardio.push(c);
         });
+        var existingBwIds = {};
+        data.bodyweight.forEach(function(b){ existingBwIds[b.id]=true; });
+        (imported.bodyweight||[]).forEach(function(b){
+          if(!existingBwIds[b.id]) data.bodyweight.push(b);
+        });
         saveData(data);
         renderHistory();
         renderExerciseList();
+        renderBodyweightReminder();
+        renderBodyweightSection();
         showToast("Import fullført!");
       }catch(err){
         alert("Kunne ikke lese filen. Er det en gyldig eksportfil fra denne appen?");
@@ -862,10 +962,12 @@
 
   function wipeAll(){
     if(confirm("Sikker på at du vil slette ALL treningsdata fra denne enheten? Dette kan ikke angres.")){
-      data = {sessions:[], cardio:[]};
+      data = {sessions:[], cardio:[], bodyweight:[]};
       saveData(data);
       renderHistory();
       renderExerciseList();
+      renderBodyweightReminder();
+      renderBodyweightSection();
       showToast("All data slettet");
     }
   }
@@ -887,6 +989,11 @@
 
   document.getElementById("saveSessionBtn").addEventListener("click", saveSession);
   document.getElementById("saveCardioBtn").addEventListener("click", saveCardio);
+  document.getElementById("saveBwBtn").addEventListener("click", saveBodyweight);
+  document.getElementById("bodyweightReminder").addEventListener("click", function(){
+    document.getElementById("bwWeight").scrollIntoView({behavior:"smooth", block:"center"});
+    document.getElementById("bwWeight").focus();
+  });
   document.getElementById("exportBtn").addEventListener("click", exportData);
   document.getElementById("wipeBtn").addEventListener("click", wipeAll);
   document.getElementById("importFile").addEventListener("change", function(e){
@@ -901,11 +1008,14 @@
 
   document.getElementById("sessionDate").value = todayStr();
   document.getElementById("cardioDate").value = todayStr();
+  document.getElementById("bwDate").value = todayStr();
 
   renderDayTabs();
   renderExerciseList();
   renderProgramDays();
   renderHistory();
+  renderBodyweightReminder();
+  renderBodyweightSection();
 })();
 </script>
 </body>
