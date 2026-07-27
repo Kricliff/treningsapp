@@ -73,6 +73,29 @@ async function getFreshAccessToken(env){
   return data.access_token;
 }
 
+function sleep(ms){
+  return new Promise(function(resolve){ setTimeout(resolve, ms); });
+}
+
+// Norway follows EU DST rules: CEST (+2h) from the last Sunday of March
+// to the last Sunday of October, CET (+1h) otherwise. The app doesn't
+// track exact clock time, so this is only used for a reasonable midday
+// timestamp, not precision timing.
+function osloUtcOffsetSeconds(dateStr){
+  const d = new Date(dateStr + "T12:00:00Z");
+  const year = d.getUTCFullYear();
+  function lastSundayUTC(y, monthIndex){
+    const last = new Date(Date.UTC(y, monthIndex + 1, 0));
+    last.setUTCDate(last.getUTCDate() - last.getUTCDay());
+    last.setUTCHours(1, 0, 0, 0);
+    return last;
+  }
+  const dstStart = lastSundayUTC(year, 2);
+  const dstEnd = lastSundayUTC(year, 9);
+  const isDST = d >= dstStart && d < dstEnd;
+  return isDST ? 7200 : 3600;
+}
+
 async function handleSendActivity(request, env){
   const appToken = request.headers.get("X-App-Token");
   if(!env.APP_TOKEN || appToken !== env.APP_TOKEN){
@@ -90,6 +113,7 @@ async function handleSendActivity(request, env){
   const date = body.date;
   const elapsedMinutes = body.elapsedMinutes;
   const description = body.description || "";
+  const sets = Array.isArray(body.sets) ? body.sets : [];
 
   if(!name || !date || !elapsedMinutes){
     return jsonResponse({ error: "missing_fields" }, 400);
@@ -102,27 +126,52 @@ async function handleSendActivity(request, env){
     return jsonResponse({ error: e.message }, 401);
   }
 
-  const activityRes = await fetch("https://www.strava.com/api/v3/activities", {
-    method: "POST",
-    headers: {
-      "Authorization": "Bearer " + accessToken,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      name: name,
-      type: "WeightTraining",
-      start_date_local: date + "T12:00:00",
-      elapsed_time: Math.round(elapsedMinutes * 60),
-      description: description,
-      trainer: 0
+  const workoutJson = {
+    version: "1.0",
+    start_time: date + "T11:00:00Z",
+    utc_offset: osloUtcOffsetSeconds(date),
+    elapsed_time: Math.round(elapsedMinutes * 60),
+    creator: { name: "Treningslogg" },
+    sets: sets.map(function(s){
+      const set = { exercise_type: s.exerciseType };
+      if(s.weight != null) set.weight = s.weight;
+      if(s.reps != null) set.repetitions = s.reps;
+      return set;
     })
-  });
+  };
 
-  const activityData = await activityRes.json();
-  if(!activityRes.ok){
-    return jsonResponse({ error: "strava_error", detail: activityData }, 502);
+  const form = new FormData();
+  form.append("data_type", "json");
+  form.append("sport_type", "WeightTraining");
+  form.append("name", name);
+  if(description) form.append("description", description);
+  form.append("file", new Blob([JSON.stringify(workoutJson)], { type: "application/json" }), "workout.json");
+
+  const uploadRes = await fetch("https://www.strava.com/api/v3/uploads", {
+    method: "POST",
+    headers: { "Authorization": "Bearer " + accessToken },
+    body: form
+  });
+  const uploadData = await uploadRes.json();
+  if(!uploadRes.ok){
+    return jsonResponse({ error: "strava_upload_error", detail: uploadData }, 502);
   }
-  return jsonResponse({ ok: true, activityId: activityData.id }, 200);
+
+  const uploadId = uploadData.id;
+  for(let i = 0; i < 8; i++){
+    await sleep(1500);
+    const pollRes = await fetch("https://www.strava.com/api/v3/uploads/" + uploadId, {
+      headers: { "Authorization": "Bearer " + accessToken }
+    });
+    const pollData = await pollRes.json();
+    if(pollData.error){
+      return jsonResponse({ error: "strava_processing_error", detail: pollData.error }, 502);
+    }
+    if(pollData.activity_id){
+      return jsonResponse({ ok: true, activityId: pollData.activity_id }, 200);
+    }
+  }
+  return jsonResponse({ ok: true, pending: true, uploadId: uploadId }, 202);
 }
 
 async function handleStatus(env){
