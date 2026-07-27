@@ -370,6 +370,72 @@
     </div>
   </section>
 
+  <!-- KOSTHOLD -->
+  <section id="view-kosthold" class="hidden">
+    <div class="card prog-section">
+      <h2>Kan man bygge muskler og gå ned i vekt samtidig?</h2>
+      <p>Ja, det kalles kroppsrekomposisjon, og det er spesielt realistisk for deg som er relativt ny i strukturert styrketrening. Kroppen kan bygge muskler og forbrenne fett samtidig, men det skjer saktere enn om du kun fokuserte på det ene. Det krever litt mer presisjon på kostholdet, og tålmodighet. Bruk styrkefremgang og hvordan klærne sitter, ikke bare badevekten, som mål på at det virker, se gjerne Fremgang-fanen.</p>
+    </div>
+
+    <div class="card prog-section">
+      <h2>Kalorier: et lite underskudd</h2>
+      <ul>
+        <li>Sikt på et lite kaloriunderskudd, ca. 200–300 kcal under vedlikehold. Stort nok til fettap, lite nok til at kroppen fortsatt kan bygge muskler</li>
+        <li>Unngå krasjdiett. Et hardt underskudd bremser muskelbyggingen og øker sjansen for å miste muskelmasse i stedet for fett</li>
+        <li>Følg vekttrenden over 2–3 uker i Fremgang-fanen, ikke daglige svingninger. Står den helt stille i flere uker uten at du blir sterkere: senk litt mer. Går den ned fort (mer enn ca. 0,5–1 % av kroppsvekten per uke): spis litt mer</li>
+      </ul>
+    </div>
+
+    <div class="card prog-section">
+      <h2>Protein: den viktigste kostholdsvariabelen</h2>
+      <ul>
+        <li>1,6–2,2 g protein per kg kroppsvekt daglig, gjerne i øvre del av spennet når du er i underskudd. Dette beskytter muskelmassen best</li>
+        <li>Fordel proteinet på 3–4 måltider gjennom dagen, med en proteinkilde til hvert måltid</li>
+        <li>Praktiske kilder: kylling, kalkun, fisk, egg, kesam, skyr, cottage cheese, magert kjøttdeig, gresk yoghurt. Proteinpulver er et greit supplement, ikke en erstatning for mat</li>
+      </ul>
+    </div>
+
+    <div class="card prog-section">
+      <h2>Karbohydrater, fett og grønnsaker</h2>
+      <ul>
+        <li>Legg karbohydrater før og etter trening, det gir energi til økten og hjelper restitusjonen. Ris, poteter, havre, frukt og brød fungerer fint</li>
+        <li>Fett trenger du nok av til hormonbalansen, men det skal ikke være hovedfokus i et underskudd. Nøtter, olivenolje, avokado og fet fisk er gode kilder</li>
+        <li>Fyll opp med grønnsaker og fiber til hvert måltid. De metter godt og gir volum uten mange kalorier, noe som gjør underskuddet lettere å holde ut</li>
+      </ul>
+    </div>
+
+    <div class="card prog-section">
+      <h2>Søvn og restitusjon</h2>
+      <p>Sikt på 7–9 timer søvn. Dette påvirker både muskelbygging (restitusjon) og fettforbrenning (sulthormoner og viljestyrke rundt mat). Det er gratis og lett å undervurdere: dårlig søvn gjør underskuddet mye tyngre og øker sjansen for å miste muskler i stedet for fett.</p>
+    </div>
+
+    <div class="card prog-section">
+      <h2>Eksempel på en dag</h2>
+      <ul>
+        <li><strong>Frokost:</strong> Skyr eller kesam med havregryn og bær</li>
+        <li><strong>Lunsj:</strong> Kylling eller fisk med ris/poteter og grønnsaker</li>
+        <li><strong>Før trening:</strong> Banan eller en brødskive</li>
+        <li><strong>Etter trening:</strong> Proteinshake eller kesam</li>
+        <li><strong>Middag:</strong> Magert kjøtt eller fisk med grønnsaker og en karbohydratkilde</li>
+        <li><strong>Kveldsmat:</strong> Cottage cheese, skyr eller nøtter hvis du er sulten</li>
+      </ul>
+    </div>
+
+    <div class="card prog-section">
+      <h2>Ting å unngå</h2>
+      <ul>
+        <li>Ikke kutt kalorier hardt eller kjør krasjdiett</li>
+        <li>Ikke dropp karbohydrater helt, du trenger energi til treningen</li>
+        <li>Ikke la deg stresse av at vekten står stille i en uke eller to</li>
+        <li>Ikke se på alkohol som gratis kalorier, det går utover restitusjonen også</li>
+      </ul>
+    </div>
+
+    <div class="card prog-section">
+      <p style="color:var(--muted);font-size:0.78rem;margin:0;">Dette er generelle, forskningsbaserte kostholdsråd, ikke personlig kostholdsveiledning. Har du en helsetilstand eller spesielle behov, snakk med lege eller klinisk ernæringsfysiolog.</p>
+    </div>
+  </section>
+
   <!-- INNSTILLINGER -->
   <section id="view-innstillinger" class="hidden">
     <div class="card">
@@ -405,6 +471,7 @@
   <button data-view="fremgang"><span class="ic">📈</span>Fremgang</button>
   <button data-view="historikk"><span class="ic">🗓️</span>Historikk</button>
   <button data-view="program"><span class="ic">📋</span>Program</button>
+  <button data-view="kosthold"><span class="ic">🥗</span>Kosthold</button>
   <button data-view="innstillinger"><span class="ic">⚙️</span>Innstillinger</button>
 </nav>
 
@@ -1335,7 +1402,7 @@
 
   // ---------- NAV ----------
   function switchView(viewName){
-    ["logg","fremgang","historikk","program","innstillinger"].forEach(function(v){
+    ["logg","fremgang","historikk","program","kosthold","innstillinger"].forEach(function(v){
       document.getElementById("view-"+v).classList.toggle("hidden", v!==viewName);
     });
     document.querySelectorAll("nav.bottom button").forEach(function(b){
