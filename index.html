@@ -202,6 +202,7 @@
   <!-- LOGG -->
   <section id="view-logg">
     <div id="bodyweightReminder" class="reminder-banner hidden"></div>
+    <div id="cardioReminder" class="reminder-banner hidden"></div>
     <div class="daytabs" id="dayTabs"></div>
 
     <div class="card">
@@ -219,7 +220,7 @@
       <button class="primary" id="saveSessionBtn">Lagre økt</button>
     </div>
 
-    <div class="card">
+    <div class="card" id="cardioCard">
       <h2>Kondisjon</h2>
       <div class="field-row">
         <div style="flex:1">
@@ -490,6 +491,11 @@
   <!-- INNSTILLINGER -->
   <section id="view-innstillinger" class="hidden">
     <div class="card">
+      <h2>Kondisjonsdager</h2>
+      <p style="color:var(--muted);font-size:0.85rem;margin-bottom:10px;">Velg hvilke ukedager du vanligvis kjører kondisjon. Da minner Logg-fanen deg på det de dagene.</p>
+      <div class="daytabs" id="cardioDayToggles"></div>
+    </div>
+    <div class="card">
       <h2>Strava</h2>
       <p id="stravaStatusText" style="color:var(--muted);font-size:0.85rem;">Sjekker tilkobling…</p>
       <a id="stravaConnectBtn" class="secondary" style="display:block;text-align:center;text-decoration:none;box-sizing:border-box;">Koble til Strava</a>
@@ -582,15 +588,17 @@
   function loadData(){
     try{
       var raw = localStorage.getItem(STORAGE_KEY);
-      if(!raw) return {sessions:[], cardio:[], bodyweight:[]};
+      if(!raw) return {sessions:[], cardio:[], bodyweight:[], settings:{cardioDays:[]}};
       var parsed = JSON.parse(raw);
       if(!parsed.sessions) parsed.sessions = [];
       if(!parsed.cardio) parsed.cardio = [];
       if(!parsed.bodyweight) parsed.bodyweight = [];
+      if(!parsed.settings) parsed.settings = {cardioDays:[]};
+      if(!parsed.settings.cardioDays) parsed.settings.cardioDays = [];
       return parsed;
     }catch(e){
       console.error("Kunne ikke lese lagret data", e);
-      return {sessions:[], cardio:[], bodyweight:[]};
+      return {sessions:[], cardio:[], bodyweight:[], settings:{cardioDays:[]}};
     }
   }
   function saveData(data){
@@ -710,6 +718,50 @@
     } else {
       wrap.innerHTML = "";
       document.getElementById("bwWeight").placeholder = "kg";
+    }
+  }
+
+  // ---------- KONDISJONSDAGER ----------
+  var WEEKDAY_LABELS = ["Søn","Man","Tir","Ons","Tor","Fre","Lør"];
+
+  function renderCardioDayToggles(){
+    var el = document.getElementById("cardioDayToggles");
+    el.innerHTML = "";
+    for(var day=1; day<=7; day++){
+      var dayNum = day % 7; // Man=1..Lør=6, Søn=0, matches Date.getDay()
+      (function(dayNum){
+        var btn = document.createElement("button");
+        btn.textContent = WEEKDAY_LABELS[dayNum];
+        if(data.settings.cardioDays.indexOf(dayNum) !== -1) btn.className = "active";
+        btn.addEventListener("click", function(){
+          var idx = data.settings.cardioDays.indexOf(dayNum);
+          if(idx === -1) data.settings.cardioDays.push(dayNum);
+          else data.settings.cardioDays.splice(idx, 1);
+          saveData(data);
+          renderCardioDayToggles();
+          renderCardioReminder();
+        });
+        el.appendChild(btn);
+      })(dayNum);
+    }
+  }
+
+  function isCardioDayToday(){
+    return data.settings.cardioDays.indexOf(new Date().getDay()) !== -1;
+  }
+
+  function hasCardioLoggedToday(){
+    var today = todayStr();
+    return data.cardio.some(function(c){ return c.date === today; });
+  }
+
+  function renderCardioReminder(){
+    var el = document.getElementById("cardioReminder");
+    if(isCardioDayToday() && !hasCardioLoggedToday()){
+      el.textContent = "🏃 I dag er en kondisjonsdag! Logg økten under.";
+      el.classList.remove("hidden");
+    } else {
+      el.classList.add("hidden");
     }
   }
 
@@ -1002,6 +1054,7 @@
     document.getElementById("cardioMinutes").value = "";
     document.getElementById("cardioNote").value = "";
     renderHistory();
+    renderCardioReminder();
   }
 
   // ---------- FREMGANG VIEW ----------
@@ -1559,11 +1612,16 @@
         (imported.bodyweight||[]).forEach(function(b){
           if(!existingBwIds[b.id]) data.bodyweight.push(b);
         });
+        if(imported.settings && imported.settings.cardioDays){
+          data.settings.cardioDays = imported.settings.cardioDays;
+        }
         saveData(data);
         renderHistory();
         renderExerciseList();
         renderBodyweightReminder();
         renderBodyweightSection();
+        renderCardioDayToggles();
+        renderCardioReminder();
         showToast("Import fullført!");
       }catch(err){
         alert("Kunne ikke lese filen. Er det en gyldig eksportfil fra denne appen?");
@@ -1574,12 +1632,14 @@
 
   function wipeAll(){
     if(confirm("Sikker på at du vil slette ALL treningsdata fra denne enheten? Dette kan ikke angres.")){
-      data = {sessions:[], cardio:[], bodyweight:[]};
+      data = {sessions:[], cardio:[], bodyweight:[], settings:{cardioDays:[]}};
       saveData(data);
       renderHistory();
       renderExerciseList();
       renderBodyweightReminder();
       renderBodyweightSection();
+      renderCardioDayToggles();
+      renderCardioReminder();
       showToast("All data slettet");
     }
   }
@@ -1595,6 +1655,10 @@
     if(viewName==="historikk") renderHistory();
     if(viewName==="fremgang") renderFremgang();
     if(viewName==="innstillinger") refreshStravaStatus();
+    if(viewName==="logg"){
+      renderBodyweightReminder();
+      renderCardioReminder();
+    }
   }
 
   document.querySelectorAll("nav.bottom button").forEach(function(b){
@@ -1607,6 +1671,10 @@
   document.getElementById("bodyweightReminder").addEventListener("click", function(){
     document.getElementById("bwWeight").scrollIntoView({behavior:"smooth", block:"center"});
     document.getElementById("bwWeight").focus();
+  });
+  document.getElementById("cardioReminder").addEventListener("click", function(){
+    document.getElementById("cardioCard").scrollIntoView({behavior:"smooth", block:"center"});
+    document.getElementById("cardioMinutes").focus();
   });
   document.getElementById("exportBtn").addEventListener("click", exportData);
   document.getElementById("wipeBtn").addEventListener("click", wipeAll);
@@ -1630,6 +1698,8 @@
   renderHistory();
   renderBodyweightReminder();
   renderBodyweightSection();
+  renderCardioDayToggles();
+  renderCardioReminder();
 })();
 </script>
 </body>
