@@ -60,6 +60,12 @@
   .exercise-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;}
   .exercise-head .name{font-weight:600;font-size:0.98rem;}
   .exercise-head .target{color:var(--muted);font-size:0.78rem;white-space:nowrap;}
+  .custom-exercise .exercise-head{gap:8px;}
+  .custom-name-input{flex:1;font-weight:600;}
+  .custom-remove-btn{
+    flex:0 0 auto;background:var(--card2);border:1px solid var(--border);color:var(--muted);
+    border-radius:8px;width:32px;height:32px;font-size:0.9rem;
+  }
   .badge{
     display:inline-block;background:var(--accent-dim);color:var(--accent);
     font-size:0.72rem;padding:2px 8px;border-radius:999px;margin-top:4px;
@@ -213,6 +219,8 @@
         </div>
       </div>
       <div id="exerciseList"></div>
+      <div id="customExerciseList"></div>
+      <button class="smallbtn" type="button" id="addCustomExerciseBtn" style="margin:4px 0 14px;">+ Legg til øvelse</button>
       <div>
         <label for="sessionNote">Notat (valgfritt)</label>
         <textarea id="sessionNote" placeholder="Hvordan føltes økten?"></textarea>
@@ -669,6 +677,13 @@
     return exId;
   }
 
+  function isProgramExerciseId(exId){
+    for(var i=0;i<PROGRAM.length;i++){
+      if(PROGRAM[i].exercises.some(function(e){return e.id===exId;})) return true;
+    }
+    return false;
+  }
+
   function buildProgressChartHTML(points){
     var max = Math.max.apply(null, points.map(function(p){return p.weight;}));
     var min = Math.min.apply(null, points.map(function(p){return p.weight;}));
@@ -886,6 +901,7 @@
     var day = getDay(currentDayId);
     var container = document.getElementById("exerciseList");
     container.innerHTML = "";
+    document.getElementById("customExerciseList").innerHTML = "";
 
     day.exercises.forEach(function(ex){
       var wrap = document.createElement("div");
@@ -990,6 +1006,57 @@
     });
   }
 
+  function addCustomExerciseBlock(){
+    var container = document.getElementById("customExerciseList");
+    var wrap = document.createElement("div");
+    wrap.className = "exercise custom-exercise";
+
+    var head = document.createElement("div");
+    head.className = "exercise-head";
+    var nameInput = document.createElement("input");
+    nameInput.type = "text";
+    nameInput.className = "custom-name-input";
+    nameInput.placeholder = "Navn på øvelse";
+    head.appendChild(nameInput);
+    var rmExBtn = document.createElement("button");
+    rmExBtn.className = "custom-remove-btn"; rmExBtn.type = "button";
+    rmExBtn.textContent = "✕";
+    rmExBtn.addEventListener("click", function(){
+      container.removeChild(wrap);
+    });
+    head.appendChild(rmExBtn);
+    wrap.appendChild(head);
+
+    var setsWrap = document.createElement("div");
+    setsWrap.className = "sets";
+    setsWrap.appendChild(makeSetRow(0, null, null));
+    setsWrap.appendChild(makeSetRow(1, null, null));
+    setsWrap.appendChild(makeSetRow(2, null, null));
+    wrap.appendChild(setsWrap);
+
+    var btns = document.createElement("div");
+    btns.className = "setbtns";
+    var addBtn = document.createElement("button");
+    addBtn.className = "smallbtn"; addBtn.type = "button";
+    addBtn.textContent = "+ sett";
+    addBtn.addEventListener("click", function(){
+      var idx = setsWrap.children.length;
+      setsWrap.appendChild(makeSetRow(idx, null, null));
+    });
+    var rmSetBtn = document.createElement("button");
+    rmSetBtn.className = "smallbtn"; rmSetBtn.type = "button";
+    rmSetBtn.textContent = "- sett";
+    rmSetBtn.addEventListener("click", function(){
+      if(setsWrap.children.length>1) setsWrap.removeChild(setsWrap.lastChild);
+    });
+    btns.appendChild(addBtn);
+    btns.appendChild(rmSetBtn);
+    wrap.appendChild(btns);
+
+    container.appendChild(wrap);
+    nameInput.focus();
+  }
+
   function showToast(msg){
     var t = document.getElementById("toast");
     t.textContent = msg;
@@ -1002,6 +1069,7 @@
     var dateVal = document.getElementById("sessionDate").value || todayStr();
     var note = document.getElementById("sessionNote").value.trim();
     var entries = {};
+    var customNames = {};
     var anyData = false;
 
     document.querySelectorAll("#exerciseList .exercise").forEach(function(exEl){
@@ -1018,6 +1086,29 @@
       if(sets.length) entries[exId] = sets;
     });
 
+    var customBlocks = document.querySelectorAll("#customExerciseList .custom-exercise");
+    for(var i=0; i<customBlocks.length; i++){
+      var block = customBlocks[i];
+      var name = block.querySelector(".custom-name-input").value.trim();
+      var sets = [];
+      block.querySelectorAll(".set-row").forEach(function(row){
+        var weight = row.querySelector(".weight-input").value;
+        var reps = row.querySelector(".reps-input").value;
+        if(weight!=="" || reps!==""){
+          sets.push({weight: weight!==""?parseFloat(weight):null, reps: reps!==""?parseInt(reps,10):null});
+        }
+      });
+      if(!sets.length) continue;
+      if(!name){
+        showToast("Gi den ekstra øvelsen et navn");
+        return;
+      }
+      var customId = "custom-" + uid();
+      entries[customId] = sets;
+      customNames[customId] = name;
+      anyData = true;
+    }
+
     if(!anyData){
       showToast("Fyll inn minst ett sett først");
       return;
@@ -1029,6 +1120,7 @@
       dayId: day.id,
       dayName: day.full,
       entries: entries,
+      customNames: customNames,
       note: note,
       createdAt: Date.now()
     });
@@ -1132,6 +1224,7 @@
     var sorted = data.sessions.slice().sort(function(a,b){return a.date.localeCompare(b.date);});
     sorted.forEach(function(s){
       Object.keys(s.entries).forEach(function(exId){
+        if(!isProgramExerciseId(exId)) return;
         var weights = s.entries[exId].map(function(st){return st.weight;}).filter(function(w){return w!=null;});
         if(!weights.length) return;
         var top = Math.max.apply(null, weights);
@@ -1347,7 +1440,7 @@
         var table = document.createElement("table");
         Object.keys(s2.entries).forEach(function(exId){
           var exMeta = day ? day.exercises.find(function(e){return e.id===exId;}) : null;
-          var exName = exMeta ? exMeta.name : exId;
+          var exName = exMeta ? exMeta.name : ((s2.customNames && s2.customNames[exId]) || exId);
           var sets = s2.entries[exId];
           var setsStr = sets.map(function(st){
             return (st.weight!=null?st.weight+"kg":"-") + " × " + (st.reps!=null?st.reps:"-");
@@ -1514,7 +1607,7 @@
     var lines = [];
     Object.keys(session.entries).forEach(function(exId){
       var exMeta = day ? day.exercises.find(function(e){ return e.id === exId; }) : null;
-      var exName = exMeta ? exMeta.name : exId;
+      var exName = exMeta ? exMeta.name : ((session.customNames && session.customNames[exId]) || exId);
       var sets = session.entries[exId];
       var setsStr = sets.map(function(st){
         return (st.weight != null ? st.weight + "kg" : "-") + "x" + (st.reps != null ? st.reps : "-");
@@ -1668,6 +1761,7 @@
   });
 
   document.getElementById("saveSessionBtn").addEventListener("click", saveSession);
+  document.getElementById("addCustomExerciseBtn").addEventListener("click", addCustomExerciseBlock);
   document.getElementById("saveCardioBtn").addEventListener("click", saveCardio);
   document.getElementById("saveBwBtn").addEventListener("click", saveBodyweight);
   document.getElementById("bodyweightReminder").addEventListener("click", function(){
