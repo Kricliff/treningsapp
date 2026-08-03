@@ -651,10 +651,6 @@
     firebase.initializeApp(CLOUD_CONFIG);
     cloudAuth = firebase.auth();
     cloudDb = firebase.firestore();
-    cloudAuth.getRedirectResult().catch(function(err){
-      console.error("Innlogging feilet", err);
-      showToast("Innlogging feilet");
-    });
     cloudAuth.onAuthStateChanged(function(user){
       cloudUser = user;
       updateCloudUI();
@@ -680,8 +676,13 @@
 
   function signInCloud(){
     if(!cloudAuth) return;
+    var statusEl = document.getElementById("cloudSyncStatusText");
     var provider = new firebase.auth.GoogleAuthProvider();
-    cloudAuth.signInWithRedirect(provider);
+    cloudAuth.signInWithPopup(provider).catch(function(err){
+      console.error("Innlogging feilet", err);
+      if(statusEl) statusEl.textContent = "Innlogging feilet (" + (err && err.code ? err.code : "ukjent feil") + "). Prøv igjen.";
+      showToast("Innlogging feilet");
+    });
   }
 
   function signOutCloud(){
