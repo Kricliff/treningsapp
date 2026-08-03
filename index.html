@@ -60,17 +60,18 @@
   textarea{resize:vertical;min-height:50px;}
   .exercise{border-top:1px solid var(--border);padding-top:12px;margin-top:12px;}
   .exercise:first-child{border-top:none;padding-top:0;margin-top:0;}
-  .exercise-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;}
+  .exercise-head{display:flex;flex-direction:column;gap:6px;}
   .exercise-head .name{font-weight:600;font-size:0.98rem;}
+  .exercise-head-sub{display:flex;justify-content:space-between;align-items:center;gap:8px;}
   .exercise-head .target{color:var(--muted);font-size:0.78rem;white-space:nowrap;}
   .exercise.skipped .cues-toggle,.exercise.skipped .progress-toggle,
   .exercise.skipped .sets,.exercise.skipped .setbtns{display:none;}
   .exercise.skipped .exercise-head .name{color:var(--muted);text-decoration:line-through;}
   .skip-btn{
     background:var(--card2);border:1px solid var(--border);color:var(--muted);
-    padding:6px 12px;border-radius:8px;font-size:0.8rem;
+    padding:6px 12px;border-radius:8px;font-size:0.8rem;flex:0 0 auto;
   }
-  .custom-exercise .exercise-head{gap:8px;}
+  .custom-exercise .exercise-head{flex-direction:row;align-items:center;gap:8px;}
   .custom-name-input{flex:1;font-weight:600;}
   .custom-remove-btn{
     flex:0 0 auto;background:var(--card2);border:1px solid var(--border);color:var(--muted);
@@ -1044,7 +1045,7 @@
       head.className = "exercise-head";
       head.innerHTML = '<div><div class="name">'+ex.name+'</div>'+
         (suggestUp ? '<span class="badge">🔼 Vurder å øke vekten</span>' : '') +
-        '</div><div class="target">'+ex.sets+' × '+ex.reps+(ex.optional ? ' <span class="optional-tag">(valgfri)</span>' : '')+'</div>';
+        '</div><div class="exercise-head-sub"><div class="target">'+ex.sets+' × '+ex.reps+(ex.optional ? ' <span class="optional-tag">(valgfri)</span>' : '')+'</div></div>';
       wrap.appendChild(head);
 
       if((ex.cues && ex.cues.length) || ex.howTo || ex.video){
@@ -1129,12 +1130,12 @@
 
       var skipBtn = document.createElement("button");
       skipBtn.className = "skip-btn"; skipBtn.type = "button";
-      skipBtn.textContent = "Hopp over i dag";
+      skipBtn.textContent = "Hopp over";
       skipBtn.addEventListener("click", function(){
         var skipped = wrap.classList.toggle("skipped");
-        skipBtn.textContent = skipped ? "Ta med igjen" : "Hopp over i dag";
+        skipBtn.textContent = skipped ? "Ta med igjen" : "Hopp over";
       });
-      head.appendChild(skipBtn);
+      head.querySelector(".exercise-head-sub").appendChild(skipBtn);
 
       container.appendChild(wrap);
     });
