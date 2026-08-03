@@ -699,37 +699,58 @@
     renderCardioReminder();
   }
 
+  // Merges remote items into local data by id, never removing anything
+  // local already has. Returns true if anything was added locally.
+  function mergeRemoteIntoLocal(remoteBlob){
+    var remote;
+    try{ remote = JSON.parse(remoteBlob); }catch(e){ console.error("Kunne ikke lese skybackup", e); return false; }
+    var changed = false;
+    var existingIds = {};
+    data.sessions.forEach(function(s){ existingIds[s.id]=true; });
+    (remote.sessions||[]).forEach(function(s){
+      if(!existingIds[s.id]){ data.sessions.push(s); changed = true; }
+    });
+    var existingCardioIds = {};
+    data.cardio.forEach(function(c){ existingCardioIds[c.id]=true; });
+    (remote.cardio||[]).forEach(function(c){
+      if(!existingCardioIds[c.id]){ data.cardio.push(c); changed = true; }
+    });
+    var existingBwIds = {};
+    data.bodyweight.forEach(function(b){ existingBwIds[b.id]=true; });
+    (remote.bodyweight||[]).forEach(function(b){
+      if(!existingBwIds[b.id]){ data.bodyweight.push(b); changed = true; }
+    });
+    if(remote.settings && remote.settings.cardioDays){
+      remote.settings.cardioDays.forEach(function(d){
+        if(data.settings.cardioDays.indexOf(d)===-1){ data.settings.cardioDays.push(d); changed = true; }
+      });
+    }
+    return changed;
+  }
+
   function pullFromCloud(){
     if(!cloudDb || !cloudUser) return;
     cloudDb.collection("backups").doc(cloudUser.uid).get().then(function(doc){
       if(!doc.exists){ pushToCloud(); return; }
       var remote = doc.data();
-      var remoteUpdatedAt = remote.updatedAt || 0;
-      var localUpdatedAt = data.updatedAt || 0;
-      if(remoteUpdatedAt > localUpdatedAt){
-        try{
-          var restored = JSON.parse(remote.blob);
-          if(!restored.sessions) restored.sessions = [];
-          if(!restored.cardio) restored.cardio = [];
-          if(!restored.bodyweight) restored.bodyweight = [];
-          if(!restored.settings) restored.settings = {cardioDays:[]};
-          if(!restored.settings.cardioDays) restored.settings.cardioDays = [];
-          restored.updatedAt = remoteUpdatedAt;
-          data = restored;
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-          renderAllViews();
-          showToast("Data gjenopprettet fra skybackup");
-        }catch(e){
-          console.error("Kunne ikke lese skybackup", e);
-        }
-      } else if(localUpdatedAt > remoteUpdatedAt){
-        pushToCloud();
+      var changed = mergeRemoteIntoLocal(remote.blob);
+      if(changed){
+        data.updatedAt = Date.now();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        renderAllViews();
+        showToast("Data synkronisert fra skybackup");
       }
+      // Push the (now merged, never-smaller) local state back up so both
+      // sides always converge to the union, without ever overwriting a
+      // fuller dataset with a thinner one.
+      pushToCloud();
     }).catch(function(err){ console.error("Kunne ikke hente skybackup", err); });
   }
 
   function pushToCloud(){
     if(!cloudDb || !cloudUser) return;
+    var isEmpty = data.sessions.length===0 && data.cardio.length===0 && data.bodyweight.length===0;
+    if(isEmpty) return; // never let an empty local state overwrite an existing cloud backup
     cloudDb.collection("backups").doc(cloudUser.uid).set({
       blob: JSON.stringify(data),
       updatedAt: data.updatedAt || Date.now()
