@@ -9,6 +9,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Trening">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>%F0%9F%92%AA</text></svg>">
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <style>
   :root{
     --bg:#0f1115;
@@ -519,6 +522,13 @@
       <div class="filehint">Økter sendes manuelt via «Send til Strava» i Historikk. Strava får kun et sammendrag (øvelser/vekter/reps som tekst), ikke selve treningsloggen.</div>
     </div>
     <div class="card">
+      <h2>Skybackup</h2>
+      <p id="cloudSyncStatusText" style="color:var(--muted);font-size:0.85rem;">Sjekker innlogging…</p>
+      <button class="secondary" id="cloudSignInBtn">Logg inn med Google</button>
+      <button class="secondary hidden" id="cloudSignOutBtn">Logg ut</button>
+      <div class="filehint">Sikkerhetskopierer treningsdataen din automatisk i skyen når du er innlogget, slik at du kan hente den tilbake hvis den forsvinner fra telefonen.</div>
+    </div>
+    <div class="card">
       <h2>Eksporter data</h2>
       <p style="color:var(--muted);font-size:0.85rem;">Last ned all treningsdata som en fil. Bruk denne til å ta med data til en annen enhet, eller som backup.</p>
       <button class="secondary" id="exportBtn">Eksporter til fil</button>
@@ -619,7 +629,115 @@
     }
   }
   function saveData(data){
+    data.updatedAt = Date.now();
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    scheduleCloudPush();
+  }
+
+  // ---------- SKYBACKUP ----------
+  var CLOUD_CONFIG = {
+    apiKey: "AIzaSyCj8yLMLMQ2e43fyg5WS0HYqgr5AdqDiGk",
+    authDomain: "backup-treningsapp.firebaseapp.com",
+    projectId: "backup-treningsapp",
+    storageBucket: "backup-treningsapp.firebasestorage.app",
+    messagingSenderId: "959042710514",
+    appId: "1:959042710514:web:bc7692f0d1828fc2d3996b"
+  };
+  var cloudAuth = null, cloudDb = null, cloudUser = null, cloudPushTimer = null;
+
+  function initCloud(){
+    if(typeof firebase === "undefined") return;
+    firebase.initializeApp(CLOUD_CONFIG);
+    cloudAuth = firebase.auth();
+    cloudDb = firebase.firestore();
+    cloudAuth.getRedirectResult().catch(function(err){
+      console.error("Innlogging feilet", err);
+      showToast("Innlogging feilet");
+    });
+    cloudAuth.onAuthStateChanged(function(user){
+      cloudUser = user;
+      updateCloudUI();
+      if(user) pullFromCloud();
+    });
+  }
+
+  function updateCloudUI(){
+    var statusEl = document.getElementById("cloudSyncStatusText");
+    var inBtn = document.getElementById("cloudSignInBtn");
+    var outBtn = document.getElementById("cloudSignOutBtn");
+    if(!statusEl) return;
+    if(cloudUser){
+      statusEl.textContent = "Innlogget som " + (cloudUser.email || cloudUser.displayName || "din Google-konto") + ". Data sikkerhetskopieres automatisk.";
+      inBtn.classList.add("hidden");
+      outBtn.classList.remove("hidden");
+    } else {
+      statusEl.textContent = "Ikke innlogget. Logg inn for å sikkerhetskopiere data automatisk i skyen.";
+      inBtn.classList.remove("hidden");
+      outBtn.classList.add("hidden");
+    }
+  }
+
+  function signInCloud(){
+    if(!cloudAuth) return;
+    var provider = new firebase.auth.GoogleAuthProvider();
+    cloudAuth.signInWithRedirect(provider);
+  }
+
+  function signOutCloud(){
+    if(!cloudAuth) return;
+    cloudAuth.signOut();
+  }
+
+  function renderAllViews(){
+    renderHistory();
+    renderExerciseList();
+    renderBodyweightReminder();
+    renderBodyweightSection();
+    renderCardioDayToggles();
+    renderCardioReminder();
+  }
+
+  function pullFromCloud(){
+    if(!cloudDb || !cloudUser) return;
+    cloudDb.collection("backups").doc(cloudUser.uid).get().then(function(doc){
+      if(!doc.exists){ pushToCloud(); return; }
+      var remote = doc.data();
+      var remoteUpdatedAt = remote.updatedAt || 0;
+      var localUpdatedAt = data.updatedAt || 0;
+      if(remoteUpdatedAt > localUpdatedAt){
+        try{
+          var restored = JSON.parse(remote.blob);
+          if(!restored.sessions) restored.sessions = [];
+          if(!restored.cardio) restored.cardio = [];
+          if(!restored.bodyweight) restored.bodyweight = [];
+          if(!restored.settings) restored.settings = {cardioDays:[]};
+          if(!restored.settings.cardioDays) restored.settings.cardioDays = [];
+          restored.updatedAt = remoteUpdatedAt;
+          data = restored;
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+          renderAllViews();
+          showToast("Data gjenopprettet fra skybackup");
+        }catch(e){
+          console.error("Kunne ikke lese skybackup", e);
+        }
+      } else if(localUpdatedAt > remoteUpdatedAt){
+        pushToCloud();
+      }
+    }).catch(function(err){ console.error("Kunne ikke hente skybackup", err); });
+  }
+
+  function pushToCloud(){
+    if(!cloudDb || !cloudUser) return;
+    cloudDb.collection("backups").doc(cloudUser.uid).set({
+      blob: JSON.stringify(data),
+      updatedAt: data.updatedAt || Date.now()
+    }).catch(function(err){ console.error("Kunne ikke lagre skybackup", err); });
+  }
+
+  function scheduleCloudPush(){
+    if(!cloudUser) return;
+    if(cloudPushTimer) clearTimeout(cloudPushTimer);
+    cloudPushTimer = setTimeout(pushToCloud, 2000);
   }
 
   var data = loadData();
@@ -1789,6 +1907,8 @@
     document.getElementById("cardioCard").scrollIntoView({behavior:"smooth", block:"center"});
     document.getElementById("cardioMinutes").focus();
   });
+  document.getElementById("cloudSignInBtn").addEventListener("click", signInCloud);
+  document.getElementById("cloudSignOutBtn").addEventListener("click", signOutCloud);
   document.getElementById("exportBtn").addEventListener("click", exportData);
   document.getElementById("wipeBtn").addEventListener("click", wipeAll);
   document.getElementById("importFile").addEventListener("change", function(e){
@@ -1813,6 +1933,7 @@
   renderBodyweightSection();
   renderCardioDayToggles();
   renderCardioReminder();
+  initCloud();
 })();
 </script>
 </body>
