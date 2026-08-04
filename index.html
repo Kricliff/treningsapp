@@ -195,6 +195,11 @@
     flex:0 0 auto;background:var(--card2);border:1px solid var(--border);color:var(--muted);
     border-radius:8px;width:28px;height:28px;font-size:0.85rem;
   }
+  .shopping-list{list-style:none;padding:0;margin:0;}
+  .shopping-list li{border-top:1px solid var(--border);padding:8px 0;font-size:0.88rem;}
+  .shopping-list li:first-child{border-top:none;}
+  .shopping-list label{display:flex;align-items:center;gap:8px;cursor:pointer;}
+  .shopping-list input[type=checkbox]{width:auto;flex:0 0 auto;}
   .streak-line{margin-top:6px;font-size:0.85rem;color:var(--text);}
   .grid-scroll{overflow-x:auto;padding-bottom:2px;}
   .grid-rows{display:flex;gap:3px;width:max-content;}
@@ -467,40 +472,10 @@
     </div>
 
     <div class="card prog-section">
-      <h2>Kan man bygge muskler og gå ned i vekt samtidig?</h2>
-      <p>Ja, det kalles kroppsrekomposisjon, og det er spesielt realistisk for deg som er relativt ny i strukturert styrketrening. Kroppen kan bygge muskler og forbrenne fett samtidig, men det skjer saktere enn om du kun fokuserte på det ene. Det krever litt mer presisjon på kostholdet, og tålmodighet. Bruk styrkefremgang og hvordan klærne sitter, ikke bare badevekten, som mål på at det virker, se gjerne Fremgang-fanen.</p>
-    </div>
-
-    <div class="card prog-section">
-      <h2>Kalorier: et lite underskudd</h2>
-      <ul>
-        <li>Sikt på et lite kaloriunderskudd, ca. 200–300 kcal under vedlikehold. Stort nok til fettap, lite nok til at kroppen fortsatt kan bygge muskler</li>
-        <li>Unngå krasjdiett. Et hardt underskudd bremser muskelbyggingen og øker sjansen for å miste muskelmasse i stedet for fett</li>
-        <li>Følg vekttrenden over 2–3 uker i Fremgang-fanen, ikke daglige svingninger. Står den helt stille i flere uker uten at du blir sterkere: senk litt mer. Går den ned fort (mer enn ca. 0,5–1 % av kroppsvekten per uke): spis litt mer</li>
-      </ul>
-    </div>
-
-    <div class="card prog-section">
-      <h2>Protein: den viktigste kostholdsvariabelen</h2>
-      <ul>
-        <li>1,6–2,2 g protein per kg kroppsvekt daglig, gjerne i øvre del av spennet når du er i underskudd. Dette beskytter muskelmassen best</li>
-        <li>Fordel proteinet på 3–4 måltider gjennom dagen, med en proteinkilde til hvert måltid</li>
-        <li>Praktiske kilder: kylling, kalkun, fisk, egg, kesam, skyr, cottage cheese, magert kjøttdeig, gresk yoghurt. Proteinpulver er et greit supplement, ikke en erstatning for mat</li>
-      </ul>
-    </div>
-
-    <div class="card prog-section">
-      <h2>Karbohydrater, fett og grønnsaker</h2>
-      <ul>
-        <li>Legg karbohydrater før og etter trening, det gir energi til økten og hjelper restitusjonen. Ris, poteter, havre, frukt og brød fungerer fint</li>
-        <li>Fett trenger du nok av til hormonbalansen, men det skal ikke være hovedfokus i et underskudd. Nøtter, olivenolje, avokado og fet fisk er gode kilder</li>
-        <li>Fyll opp med grønnsaker og fiber til hvert måltid. De metter godt og gir volum uten mange kalorier, noe som gjør underskuddet lettere å holde ut</li>
-      </ul>
-    </div>
-
-    <div class="card prog-section">
-      <h2>Søvn og restitusjon</h2>
-      <p>Sikt på 7–9 timer søvn. Dette påvirker både muskelbygging (restitusjon) og fettforbrenning (sulthormoner og viljestyrke rundt mat). Det er gratis og lett å undervurdere: dårlig søvn gjør underskuddet mye tyngre og øker sjansen for å miste muskler i stedet for fett.</p>
+      <h2>Handleliste</h2>
+      <p style="color:var(--muted);font-size:0.85rem;">Genererer et tilfeldig forslag til middag, snacks og kveldsmat som til sammen holder seg innenfor det som er igjen av dagens kaloriemål, pluss en handleliste over hva du trenger å kjøpe.</p>
+      <button class="secondary" type="button" id="genShoppingListBtn">Generer handleliste</button>
+      <div id="shoppingListResult" style="margin-top:12px;"></div>
     </div>
 
     <div class="card prog-section">
@@ -537,29 +512,6 @@
         <li><strong>Tunfisksalat:</strong> Tunfisk på boks, mais, bønner, litt olje/eddik, fullkornsknekkebrød. Ingen koking</li>
         <li><strong>Cottage cheese-toast:</strong> Fullkornsbrød, cottage cheese, skinke eller kylling oppå</li>
         <li><strong>Proteinshake og banan:</strong> Rask løsning når du ikke rekker et ordentlig måltid, spesielt etter trening</li>
-      </ul>
-    </div>
-
-    <div class="card prog-section">
-      <h2>Matvarer å begrense</h2>
-      <ul>
-        <li>Sukkerholdig drikke som brus, saft og energidrikk - gir mange "tomme" kalorier uten å mette</li>
-        <li>Godteri og kjeks i store mengder - lett å spise mye på kort tid uten å bli mett</li>
-        <li>Dypstekt mat og fast food - høyt kaloriinnhold og lav metthet per kalori</li>
-        <li>Flytende kalorier generelt, som juice og søte smoothies - lett å drikke mye uten å merke det</li>
-        <li>Sterkt bearbeidet mat (ferdigmat med mye tilsatt sukker/fett) som hoveddel av kostholdet, i småporsjoner er det helt greit</li>
-        <li>Mer enn noen få alkoholenheter i uken - går utover restitusjon og proteinsyntese</li>
-      </ul>
-      <p style="color:var(--muted);font-size:0.78rem;margin-top:8px;">Ingen av disse er strengt forbudt. Poenget er at de ikke bør være hoveddelen av kostholdet ditt, ikke at du aldri kan spise dem.</p>
-    </div>
-
-    <div class="card prog-section">
-      <h2>Ting å unngå</h2>
-      <ul>
-        <li>Ikke kutt kalorier hardt eller kjør krasjdiett</li>
-        <li>Ikke dropp karbohydrater helt, du trenger energi til treningen</li>
-        <li>Ikke la deg stresse av at vekten står stille i en uke eller to</li>
-        <li>Ikke se på alkohol som gratis kalorier, det går utover restitusjonen også</li>
       </ul>
     </div>
 
@@ -1998,6 +1950,91 @@
     document.getElementById("customFoodCarbs").value = "";
   }
 
+  // ---------- HANDLELISTE ----------
+  var DINNER_OPTIONS = [
+    {name:"Kyllingwok med ris", kcal:550, protein:40, fat:12, carbs:65, ingredients:["Kyllingfilet","Ris","Fersk eller frossen wok-grønnsaksmiks","Soyasaus","Hvitløk"]},
+    {name:"Laks med søtpotet og brokkoli", kcal:520, protein:35, fat:22, carbs:35, ingredients:["Laksefilet","Søtpotet","Brokkoli","Olivenolje","Sitron"]},
+    {name:"Kjøttdeig-wok med nudler", kcal:580, protein:32, fat:18, carbs:60, ingredients:["Kjøttdeig 5%","Nudler eller ris","Frossen grønnsaksmiks","Soyasaus","Ingefær"]},
+    {name:"Kalkunfilet med ovnsbakte poteter", kcal:490, protein:38, fat:10, carbs:55, ingredients:["Kalkunfilet","Poteter","Brokkoli eller grønn salat","Olivenolje","Krydder"]},
+    {name:"Torskefilet med ris og grønnsaker", kcal:430, protein:34, fat:8, carbs:52, ingredients:["Torskefilet","Ris","Gulrot","Brokkoli","Smør eller olje"]},
+    {name:"Biff med ris og salat", kcal:600, protein:36, fat:24, carbs:50, ingredients:["Indrefilet eller biff","Ris","Blandet salat","Olivenolje","Balsamico"]},
+    {name:"Tunfisksalat med fullkornsknekkebrød", kcal:420, protein:30, fat:14, carbs:40, ingredients:["Tunfisk i vann","Mais","Bønner","Fullkornsknekkebrød","Olje/eddik"]},
+    {name:"Tofu-wok med ris", kcal:480, protein:22, fat:16, carbs:60, ingredients:["Tofu","Ris","Wok-grønnsaksmiks","Soyasaus","Sesamolje"]},
+    {name:"Svinefilet med poteter og gulrot", kcal:540, protein:34, fat:18, carbs:52, ingredients:["Svinefilet","Poteter","Gulrot","Smør","Krydder"]},
+    {name:"Kylling- og quinoasalat", kcal:470, protein:36, fat:14, carbs:44, ingredients:["Kyllingfilet","Quinoa","Agurk","Cherrytomater","Fetaost","Olivenolje"]}
+  ];
+  var SNACK_OPTIONS = [
+    {name:"Skyr med bær", kcal:180, protein:18, fat:1, carbs:22, ingredients:["Skyr","Frosne bær"]},
+    {name:"Cottage cheese med knekkebrød", kcal:220, protein:16, fat:5, carbs:24, ingredients:["Cottage cheese","Knekkebrød"]},
+    {name:"Banan med peanøttsmør", kcal:260, protein:7, fat:14, carbs:28, ingredients:["Banan","Peanøttsmør"]},
+    {name:"Mandler (en håndfull)", kcal:200, protein:7, fat:17, carbs:7, ingredients:["Mandler"]},
+    {name:"Gresk yoghurt med honning", kcal:190, protein:12, fat:6, carbs:20, ingredients:["Gresk yoghurt","Honning"]},
+    {name:"Eple med peanøttsmør", kcal:230, protein:5, fat:14, carbs:24, ingredients:["Eple","Peanøttsmør"]},
+    {name:"Proteinshake", kcal:150, protein:25, fat:2, carbs:6, ingredients:["Proteinpulver","Melk eller vann"]},
+    {name:"Cottage cheese med paprika", kcal:150, protein:15, fat:4, carbs:8, ingredients:["Cottage cheese","Paprika"]}
+  ];
+  var EVENING_OPTIONS = [
+    {name:"Skyr med kanel", kcal:150, protein:15, fat:0.5, carbs:18, ingredients:["Skyr","Kanel"]},
+    {name:"Cottage cheese med druer", kcal:170, protein:14, fat:3, carbs:18, ingredients:["Cottage cheese","Druer"]},
+    {name:"Kesam naturell", kcal:130, protein:14, fat:2, carbs:12, ingredients:["Kesam"]},
+    {name:"Nøttemiks (liten håndfull)", kcal:180, protein:5, fat:15, carbs:6, ingredients:["Mandler","Valnøtter"]},
+    {name:"Ristet knekkebrød med cottage cheese", kcal:200, protein:13, fat:4, carbs:22, ingredients:["Knekkebrød","Cottage cheese"]}
+  ];
+
+  function pickRandom(arr){ return arr[Math.floor(Math.random() * arr.length)]; }
+
+  function generateShoppingList(){
+    var totals = sumNutrition(nutritionEntriesForDate(todayStr()));
+    var target = data.settings.calorieTarget || DEFAULT_CALORIE_TARGET;
+    var remaining = target.kcal - totals.kcal;
+    var picked = null;
+    if(remaining > 0){
+      for(var i=0; i<50; i++){
+        var d = pickRandom(DINNER_OPTIONS), s = pickRandom(SNACK_OPTIONS), k = pickRandom(EVENING_OPTIONS);
+        var sum = d.kcal + s.kcal + k.kcal;
+        if(sum <= remaining){ picked = {dinner:d, snack:s, evening:k, sum:sum}; break; }
+      }
+    }
+    if(!picked){
+      var minD = DINNER_OPTIONS.reduce(function(a,b){ return b.kcal < a.kcal ? b : a; });
+      var minS = SNACK_OPTIONS.reduce(function(a,b){ return b.kcal < a.kcal ? b : a; });
+      var minK = EVENING_OPTIONS.reduce(function(a,b){ return b.kcal < a.kcal ? b : a; });
+      picked = {dinner:minD, snack:minS, evening:minK, sum:minD.kcal+minS.kcal+minK.kcal, tooTight:true};
+    }
+    renderShoppingList(picked, remaining);
+  }
+
+  function renderShoppingList(picked, remaining){
+    var el = document.getElementById("shoppingListResult");
+    var meals = [
+      {label:"Middag", item:picked.dinner},
+      {label:"Snacks", item:picked.snack},
+      {label:"Kveldsmat", item:picked.evening}
+    ];
+    var html = "";
+    if(picked.tooTight){
+      html += '<p style="color:var(--muted);font-size:0.85rem;">Du har lite eller ingenting igjen av dagens kaloriemål ('+Math.round(remaining)+' kcal). Her er det letteste alternativet uansett ('+picked.sum+' kcal totalt):</p>';
+    } else {
+      html += '<p style="color:var(--muted);font-size:0.85rem;">Du har ca. '+Math.round(remaining)+' kcal igjen i dag. Forslag på '+picked.sum+' kcal totalt:</p>';
+    }
+    meals.forEach(function(m){
+      html += '<div class="nutri-log-item"><div><div class="nutri-name">'+m.label+': '+m.item.name+'</div>'+
+        '<div class="nutri-meta">'+m.item.kcal+' kcal · P '+m.item.protein+'g · F '+m.item.fat+'g · K '+m.item.carbs+'g</div></div></div>';
+    });
+    var ingredients = [];
+    meals.forEach(function(m){
+      m.item.ingredients.forEach(function(ing){
+        if(ingredients.indexOf(ing) === -1) ingredients.push(ing);
+      });
+    });
+    html += '<p style="color:var(--muted);font-size:0.85rem;margin-top:14px;">Handleliste:</p><ul class="shopping-list">';
+    ingredients.forEach(function(ing){
+      html += '<li><label><input type="checkbox"> '+ing+'</label></li>';
+    });
+    html += '</ul>';
+    el.innerHTML = html;
+  }
+
   // ---------- STRAVA ----------
   function stravaAuthUrl(){
     return "https://www.strava.com/oauth/authorize?client_id=" + encodeURIComponent(STRAVA_CONFIG.clientId) +
@@ -2220,6 +2257,7 @@
   document.getElementById("saveTargetBtn").addEventListener("click", saveCalorieTarget);
   document.getElementById("addFoodDbBtn").addEventListener("click", addFoodFromDb);
   document.getElementById("addCustomFoodBtn").addEventListener("click", addCustomFood);
+  document.getElementById("genShoppingListBtn").addEventListener("click", generateShoppingList);
   document.getElementById("nutriDate").addEventListener("change", renderNutritionCalc);
 
   document.getElementById("sessionDate").value = todayStr();
