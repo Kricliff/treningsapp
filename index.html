@@ -182,6 +182,19 @@
   .weekbar{background:var(--card2);border-radius:999px;height:14px;overflow:hidden;}
   .weekbar-fill{background:var(--accent);height:100%;border-radius:999px;transition:width .3s;}
   .weekbar-label{margin-top:8px;font-size:0.85rem;color:var(--muted);}
+  .target-edit{display:flex;gap:8px;}
+  .target-edit > div{flex:1;min-width:0;}
+  .target-edit label{display:block;margin-bottom:4px;}
+  .nutri-progress-item{margin-bottom:10px;}
+  .nutri-progress-item .weekbar-label{margin-top:4px;font-size:0.75rem;}
+  .nutri-log-item{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--border);}
+  .nutri-log-item:first-child{border-top:none;}
+  .nutri-log-item .nutri-name{font-size:0.85rem;}
+  .nutri-log-item .nutri-meta{font-size:0.72rem;color:var(--muted);}
+  .nutri-log-item button{
+    flex:0 0 auto;background:var(--card2);border:1px solid var(--border);color:var(--muted);
+    border-radius:8px;width:28px;height:28px;font-size:0.85rem;
+  }
   .streak-line{margin-top:6px;font-size:0.85rem;color:var(--text);}
   .grid-scroll{overflow-x:auto;padding-bottom:2px;}
   .grid-rows{display:flex;gap:3px;width:max-content;}
@@ -401,14 +414,56 @@
   <section id="view-kosthold" class="hidden">
     <div class="card prog-section">
       <h2>Din personlige plan</h2>
-      <p>Basert på 47 år, 178 cm, 87 kg, mann, stillesittende jobb og styrketrening 3–4x/uke (Mifflin-St Jeor-formelen, aktivitetsfaktor 1,4, med et underskudd på 300 kcal for kroppsrekomposisjon):</p>
+      <p>Basert på 47 år, 178 cm, 87 kg, mann, stillesittende jobb og styrketrening 3–4x/uke, med et moderat underskudd for jevn fettreduksjon uten å gå på bekostning av styrke/muskelmasse:</p>
       <div class="stat-row">
-        <div class="stat-tile"><div class="stat-num">2150</div><div class="stat-label">kcal / dag</div></div>
-        <div class="stat-tile"><div class="stat-num">174 g</div><div class="stat-label">Protein</div></div>
-        <div class="stat-tile"><div class="stat-num">78 g</div><div class="stat-label">Fett</div></div>
-        <div class="stat-tile"><div class="stat-num">188 g</div><div class="stat-label">Karbohydrater</div></div>
+        <div class="stat-tile"><div class="stat-num" id="planKcal">2300</div><div class="stat-label">kcal / dag</div></div>
+        <div class="stat-tile"><div class="stat-num" id="planProtein">160 g</div><div class="stat-label">Protein</div></div>
+        <div class="stat-tile"><div class="stat-num" id="planFat">75 g</div><div class="stat-label">Fett</div></div>
+        <div class="stat-tile"><div class="stat-num" id="planCarbs">245 g</div><div class="stat-label">Karbohydrater</div></div>
       </div>
-      <p style="margin-top:10px;">Dette er et startpunkt, ikke en fasit. Juster etter vekttrenden i Fremgang-fanen: står vekten stille i 3 uker uten at du blir sterkere, trekk fra ca. 150 kcal. Går den ned mer enn ca. 1 % av kroppsvekten per uke, legg til ca. 150 kcal. Når kroppsvekten endrer seg merkbart (et par kg), oppdater proteinmålet til ny vekt × 2 g, resten av kaloriene fordeles som før mellom fett og karbohydrater. To alkoholenheter i uken er lavt og påvirker ikke denne planen nevneverdig.</p>
+      <p style="margin-top:10px;">Dette er et startpunkt, ikke en fasit, du kan justere målet i kalorikalkulatoren under. Vei deg 3–4x/uke og se på ukesgjennomsnittet i Fremgang-fanen: ingen bevegelse på 2–3 uker, trekk fra 100–150 kcal. Går vekten ned mer enn ca. 0,8–1 kg/uke (for raskt, mer muskeltap), legg til 100–150 kcal. Når kroppsvekten endrer seg merkbart (et par kg), oppdater proteinmålet til ny vekt × 2 g, resten fordeles som før mellom fett og karbohydrater.</p>
+    </div>
+
+    <div class="card prog-section">
+      <h2>Kalorikalkulator</h2>
+      <p style="color:var(--muted);font-size:0.85rem;">Daglig mål (juster selv etter behov):</p>
+      <div class="target-edit">
+        <div><label for="targetKcal">kcal</label><input type="number" id="targetKcal"></div>
+        <div><label for="targetProtein">Protein (g)</label><input type="number" id="targetProtein"></div>
+        <div><label for="targetFat">Fett (g)</label><input type="number" id="targetFat"></div>
+        <div><label for="targetCarbs">Karbo (g)</label><input type="number" id="targetCarbs"></div>
+      </div>
+      <button class="secondary" type="button" id="saveTargetBtn" style="margin-top:8px;">Lagre mål</button>
+
+      <div class="field-row" style="margin-top:16px;">
+        <div style="flex:1"><label for="nutriDate">Dato</label><input type="date" id="nutriDate"></div>
+      </div>
+
+      <p style="color:var(--muted);font-size:0.85rem;margin-top:10px;">Legg til fra matvareliste</p>
+      <div class="field-row">
+        <div style="flex:2"><select id="nutriFoodSelect"></select></div>
+        <div style="flex:1"><input type="number" id="nutriGrams" placeholder="gram" value="100"></div>
+      </div>
+      <button class="secondary" type="button" id="addFoodDbBtn">+ Legg til</button>
+
+      <details style="margin-top:14px;">
+        <summary>Legg til egendefinert vare</summary>
+        <div class="field-row" style="margin-top:8px;">
+          <div style="flex:1"><input type="text" id="customFoodName" placeholder="Navn (f.eks. 1 skive brød)"></div>
+        </div>
+        <div class="target-edit">
+          <div><label for="customFoodKcal">kcal</label><input type="number" id="customFoodKcal"></div>
+          <div><label for="customFoodProtein">Protein (g)</label><input type="number" id="customFoodProtein"></div>
+          <div><label for="customFoodFat">Fett (g)</label><input type="number" id="customFoodFat"></div>
+          <div><label for="customFoodCarbs">Karbo (g)</label><input type="number" id="customFoodCarbs"></div>
+        </div>
+        <button class="secondary" type="button" id="addCustomFoodBtn" style="margin-top:8px;">+ Legg til egendefinert</button>
+      </details>
+
+      <p style="color:var(--muted);font-size:0.85rem;margin-top:16px;">Spist denne dagen</p>
+      <div class="stat-row" id="nutriTotals"></div>
+      <div id="nutriProgress"></div>
+      <div id="nutriLogList" style="margin-top:10px;"></div>
     </div>
 
     <div class="card prog-section">
@@ -617,20 +672,28 @@
     return STRAVA_CONFIG.clientId.indexOf("REPLACE") !== 0 && STRAVA_CONFIG.workerUrl.indexOf("REPLACE") !== 0;
   }
 
+  var DEFAULT_CALORIE_TARGET = {kcal:2300, protein:160, fat:75, carbs:245};
+
+  function emptyData(){
+    return {sessions:[], cardio:[], bodyweight:[], nutritionLog:[], settings:{cardioDays:[], calorieTarget:Object.assign({}, DEFAULT_CALORIE_TARGET)}};
+  }
+
   function loadData(){
     try{
       var raw = localStorage.getItem(STORAGE_KEY);
-      if(!raw) return {sessions:[], cardio:[], bodyweight:[], settings:{cardioDays:[]}};
+      if(!raw) return emptyData();
       var parsed = JSON.parse(raw);
       if(!parsed.sessions) parsed.sessions = [];
       if(!parsed.cardio) parsed.cardio = [];
       if(!parsed.bodyweight) parsed.bodyweight = [];
+      if(!parsed.nutritionLog) parsed.nutritionLog = [];
       if(!parsed.settings) parsed.settings = {cardioDays:[]};
       if(!parsed.settings.cardioDays) parsed.settings.cardioDays = [];
+      if(!parsed.settings.calorieTarget) parsed.settings.calorieTarget = Object.assign({}, DEFAULT_CALORIE_TARGET);
       return parsed;
     }catch(e){
       console.error("Kunne ikke lese lagret data", e);
-      return {sessions:[], cardio:[], bodyweight:[], settings:{cardioDays:[]}};
+      return emptyData();
     }
   }
   function saveData(data){
@@ -701,6 +764,7 @@
     renderBodyweightSection();
     renderCardioDayToggles();
     renderCardioReminder();
+    renderNutritionCalc();
   }
 
   // Merges remote items into local data by id, never removing anything
@@ -724,10 +788,19 @@
     (remote.bodyweight||[]).forEach(function(b){
       if(!existingBwIds[b.id]){ data.bodyweight.push(b); changed = true; }
     });
+    var existingNutriIds = {};
+    data.nutritionLog.forEach(function(n){ existingNutriIds[n.id]=true; });
+    (remote.nutritionLog||[]).forEach(function(n){
+      if(!existingNutriIds[n.id]){ data.nutritionLog.push(n); changed = true; }
+    });
     if(remote.settings && remote.settings.cardioDays){
       remote.settings.cardioDays.forEach(function(d){
         if(data.settings.cardioDays.indexOf(d)===-1){ data.settings.cardioDays.push(d); changed = true; }
       });
+    }
+    if(!data.settings.calorieTarget && remote.settings && remote.settings.calorieTarget){
+      data.settings.calorieTarget = remote.settings.calorieTarget;
+      changed = true;
     }
     return changed;
   }
@@ -753,7 +826,7 @@
 
   function pushToCloud(){
     if(!cloudDb || !cloudUser) return;
-    var isEmpty = data.sessions.length===0 && data.cardio.length===0 && data.bodyweight.length===0;
+    var isEmpty = data.sessions.length===0 && data.cardio.length===0 && data.bodyweight.length===0 && data.nutritionLog.length===0;
     if(isEmpty) return; // never let an empty local state overwrite an existing cloud backup
     cloudDb.collection("backups").doc(cloudUser.uid).set({
       blob: JSON.stringify(data),
@@ -1729,6 +1802,202 @@
     });
   }
 
+  // ---------- KALORIKALKULATOR ----------
+  // kcal/protein/fett/karbo er per 100g. Grovt anslåtte, vanlige verdier -
+  // ikke laboratorieanalyser, men gode nok til et daglig overslag.
+  var FOOD_DB = [
+    {name:"Avokado", kcal:160, protein:2, fat:15, carbs:9},
+    {name:"Banan", kcal:89, protein:1.1, fat:0.3, carbs:23},
+    {name:"Biff/indrefilet", kcal:201, protein:26, fat:10, carbs:0},
+    {name:"Blandet salat", kcal:15, protein:1.4, fat:0.2, carbs:2.9},
+    {name:"Blåbær", kcal:57, protein:0.7, fat:0.3, carbs:14},
+    {name:"Bønner, kokte", kcal:127, protein:9, fat:0.5, carbs:23},
+    {name:"Cottage cheese", kcal:98, protein:11, fat:4.3, carbs:3.4},
+    {name:"Egg", kcal:155, protein:13, fat:11, carbs:1.1},
+    {name:"Eple", kcal:52, protein:0.3, fat:0.2, carbs:14},
+    {name:"Fullkornsbrød", kcal:219, protein:9, fat:3, carbs:38},
+    {name:"Gresk yoghurt", kcal:97, protein:9, fat:5, carbs:4},
+    {name:"Gulrot", kcal:41, protein:0.9, fat:0.2, carbs:10},
+    {name:"Havregryn, tørr", kcal:389, protein:13, fat:7, carbs:66},
+    {name:"Helmelk", kcal:61, protein:3.4, fat:3.6, carbs:4.7},
+    {name:"Kalkunfilet", kcal:135, protein:29, fat:1, carbs:0},
+    {name:"Kesam", kcal:98, protein:12, fat:2, carbs:5},
+    {name:"Kjøttdeig 14%", kcal:220, protein:18, fat:14, carbs:0},
+    {name:"Kjøttdeig 5% (mager)", kcal:137, protein:20, fat:5, carbs:0},
+    {name:"Knekkebrød", kcal:380, protein:10, fat:2, carbs:70},
+    {name:"Kyllingfilet, stekt/kokt", kcal:165, protein:31, fat:3.6, carbs:0},
+    {name:"Laks", kcal:208, protein:20, fat:13, carbs:0},
+    {name:"Lettmelk", kcal:46, protein:3.4, fat:1, carbs:5},
+    {name:"Linser, kokte", kcal:116, protein:9, fat:0.4, carbs:20},
+    {name:"Mandler", kcal:579, protein:21, fat:50, carbs:22},
+    {name:"Olivenolje", kcal:884, protein:0, fat:100, carbs:0},
+    {name:"Pasta, kokt", kcal:131, protein:5, fat:1.1, carbs:25},
+    {name:"Peanøttsmør", kcal:588, protein:25, fat:50, carbs:20},
+    {name:"Poteter, kokte", kcal:87, protein:2, fat:0.1, carbs:20},
+    {name:"Proteinpulver (whey)", kcal:380, protein:75, fat:6, carbs:8},
+    {name:"Quinoa, kokt", kcal:120, protein:4.4, fat:1.9, carbs:21},
+    {name:"Reker", kcal:71, protein:13, fat:1, carbs:1},
+    {name:"Ris, kokt", kcal:130, protein:2.4, fat:0.3, carbs:28},
+    {name:"Svinefilet", kcal:143, protein:21, fat:6, carbs:0},
+    {name:"Søtpotet, kokt", kcal:86, protein:1.6, fat:0.1, carbs:20},
+    {name:"Tofu", kcal:76, protein:8, fat:4.8, carbs:1.9},
+    {name:"Torsk", kcal:82, protein:18, fat:0.7, carbs:0},
+    {name:"Tunfisk i vann (boks)", kcal:116, protein:26, fat:1, carbs:0},
+    {name:"Valnøtter", kcal:654, protein:15, fat:65, carbs:14},
+    {name:"Ørret", kcal:150, protein:20, fat:7, carbs:0}
+  ];
+
+  function populateFoodSelect(){
+    var sel = document.getElementById("nutriFoodSelect");
+    sel.innerHTML = "";
+    FOOD_DB.forEach(function(f, idx){
+      var opt = document.createElement("option");
+      opt.value = idx;
+      opt.textContent = f.name + " (100g)";
+      sel.appendChild(opt);
+    });
+  }
+
+  function nutritionEntriesForDate(dateVal){
+    return data.nutritionLog.filter(function(n){ return n.date === dateVal; });
+  }
+
+  function sumNutrition(entries){
+    var totals = {kcal:0, protein:0, fat:0, carbs:0};
+    entries.forEach(function(n){
+      totals.kcal += n.kcal; totals.protein += n.protein; totals.fat += n.fat; totals.carbs += n.carbs;
+    });
+    return totals;
+  }
+
+  function nutriProgressRow(label, value, target){
+    var pct = target > 0 ? Math.min(100, Math.round(value / target * 100)) : 0;
+    var div = document.createElement("div");
+    div.className = "nutri-progress-item";
+    div.innerHTML = '<div class="weekbar-label">'+label+': '+Math.round(value)+' / '+Math.round(target)+'</div>'+
+      '<div class="weekbar"><div class="weekbar-fill" style="width:'+pct+'%;"></div></div>';
+    return div;
+  }
+
+  function renderNutritionCalc(){
+    var target = data.settings.calorieTarget || DEFAULT_CALORIE_TARGET;
+    document.getElementById("targetKcal").value = target.kcal;
+    document.getElementById("targetProtein").value = target.protein;
+    document.getElementById("targetFat").value = target.fat;
+    document.getElementById("targetCarbs").value = target.carbs;
+    document.getElementById("planKcal").textContent = target.kcal;
+    document.getElementById("planProtein").textContent = target.protein + " g";
+    document.getElementById("planFat").textContent = target.fat + " g";
+    document.getElementById("planCarbs").textContent = target.carbs + " g";
+
+    var dateEl = document.getElementById("nutriDate");
+    var dateVal = dateEl.value || todayStr();
+    var entries = nutritionEntriesForDate(dateVal).sort(function(a,b){ return a.createdAt - b.createdAt; });
+    var totals = sumNutrition(entries);
+
+    var totalsEl = document.getElementById("nutriTotals");
+    totalsEl.innerHTML =
+      '<div class="stat-tile"><div class="stat-num">'+Math.round(totals.kcal)+'</div><div class="stat-label">kcal</div></div>'+
+      '<div class="stat-tile"><div class="stat-num">'+Math.round(totals.protein)+' g</div><div class="stat-label">Protein</div></div>'+
+      '<div class="stat-tile"><div class="stat-num">'+Math.round(totals.fat)+' g</div><div class="stat-label">Fett</div></div>'+
+      '<div class="stat-tile"><div class="stat-num">'+Math.round(totals.carbs)+' g</div><div class="stat-label">Karbohydrater</div></div>';
+
+    var progressEl = document.getElementById("nutriProgress");
+    progressEl.innerHTML = "";
+    progressEl.appendChild(nutriProgressRow("kcal", totals.kcal, target.kcal));
+    progressEl.appendChild(nutriProgressRow("Protein (g)", totals.protein, target.protein));
+    progressEl.appendChild(nutriProgressRow("Fett (g)", totals.fat, target.fat));
+    progressEl.appendChild(nutriProgressRow("Karbo (g)", totals.carbs, target.carbs));
+
+    var listEl = document.getElementById("nutriLogList");
+    listEl.innerHTML = "";
+    if(!entries.length){
+      listEl.innerHTML = '<div class="empty">Ingenting registrert denne dagen enda.</div>';
+    }
+    entries.forEach(function(n){
+      var row = document.createElement("div");
+      row.className = "nutri-log-item";
+      row.innerHTML = '<div><div class="nutri-name">'+n.name+'</div>'+
+        '<div class="nutri-meta">'+Math.round(n.kcal)+' kcal · P '+Math.round(n.protein)+'g · F '+Math.round(n.fat)+'g · K '+Math.round(n.carbs)+'g</div></div>';
+      var delBtn = document.createElement("button");
+      delBtn.type = "button";
+      delBtn.textContent = "✕";
+      delBtn.addEventListener("click", function(){
+        data.nutritionLog = data.nutritionLog.filter(function(x){ return x.id !== n.id; });
+        saveData(data);
+        renderNutritionCalc();
+      });
+      row.appendChild(delBtn);
+      listEl.appendChild(row);
+    });
+  }
+
+  function saveCalorieTarget(){
+    var kcal = parseFloat(document.getElementById("targetKcal").value);
+    var protein = parseFloat(document.getElementById("targetProtein").value);
+    var fat = parseFloat(document.getElementById("targetFat").value);
+    var carbs = parseFloat(document.getElementById("targetCarbs").value);
+    if([kcal, protein, fat, carbs].some(function(v){ return isNaN(v) || v < 0; })){
+      showToast("Fyll inn gyldige tall for målet");
+      return;
+    }
+    data.settings.calorieTarget = {kcal:kcal, protein:protein, fat:fat, carbs:carbs};
+    saveData(data);
+    renderNutritionCalc();
+    showToast("Mål lagret");
+  }
+
+  function addFoodFromDb(){
+    var sel = document.getElementById("nutriFoodSelect");
+    var grams = parseFloat(document.getElementById("nutriGrams").value);
+    if(!grams || grams <= 0){
+      showToast("Fyll inn gram først");
+      return;
+    }
+    var food = FOOD_DB[parseInt(sel.value, 10)];
+    var factor = grams / 100;
+    var dateVal = document.getElementById("nutriDate").value || todayStr();
+    data.nutritionLog.push({
+      id: uid(), date: dateVal, name: food.name + " (" + grams + " g)",
+      kcal: food.kcal * factor, protein: food.protein * factor,
+      fat: food.fat * factor, carbs: food.carbs * factor,
+      createdAt: Date.now()
+    });
+    saveData(data);
+    renderNutritionCalc();
+    showToast("Lagt til!");
+  }
+
+  function addCustomFood(){
+    var name = document.getElementById("customFoodName").value.trim();
+    var kcal = parseFloat(document.getElementById("customFoodKcal").value);
+    var protein = parseFloat(document.getElementById("customFoodProtein").value) || 0;
+    var fat = parseFloat(document.getElementById("customFoodFat").value) || 0;
+    var carbs = parseFloat(document.getElementById("customFoodCarbs").value) || 0;
+    if(!name){
+      showToast("Gi varen et navn");
+      return;
+    }
+    if(isNaN(kcal) || kcal < 0){
+      showToast("Fyll inn kcal først");
+      return;
+    }
+    var dateVal = document.getElementById("nutriDate").value || todayStr();
+    data.nutritionLog.push({
+      id: uid(), date: dateVal, name: name,
+      kcal: kcal, protein: protein, fat: fat, carbs: carbs,
+      createdAt: Date.now()
+    });
+    saveData(data);
+    renderNutritionCalc();
+    showToast("Lagt til!");
+    document.getElementById("customFoodName").value = "";
+    document.getElementById("customFoodKcal").value = "";
+    document.getElementById("customFoodProtein").value = "";
+    document.getElementById("customFoodFat").value = "";
+    document.getElementById("customFoodCarbs").value = "";
+  }
+
   // ---------- STRAVA ----------
   function stravaAuthUrl(){
     return "https://www.strava.com/oauth/authorize?client_id=" + encodeURIComponent(STRAVA_CONFIG.clientId) +
@@ -1869,16 +2138,19 @@
         (imported.bodyweight||[]).forEach(function(b){
           if(!existingBwIds[b.id]) data.bodyweight.push(b);
         });
+        var existingNutriIds = {};
+        data.nutritionLog.forEach(function(n){ existingNutriIds[n.id]=true; });
+        (imported.nutritionLog||[]).forEach(function(n){
+          if(!existingNutriIds[n.id]) data.nutritionLog.push(n);
+        });
         if(imported.settings && imported.settings.cardioDays){
           data.settings.cardioDays = imported.settings.cardioDays;
         }
+        if(imported.settings && imported.settings.calorieTarget){
+          data.settings.calorieTarget = imported.settings.calorieTarget;
+        }
         saveData(data);
-        renderHistory();
-        renderExerciseList();
-        renderBodyweightReminder();
-        renderBodyweightSection();
-        renderCardioDayToggles();
-        renderCardioReminder();
+        renderAllViews();
         showToast("Import fullført!");
       }catch(err){
         alert("Kunne ikke lese filen. Er det en gyldig eksportfil fra denne appen?");
@@ -1889,14 +2161,11 @@
 
   function wipeAll(){
     if(confirm("Sikker på at du vil slette ALL treningsdata fra denne enheten? Dette kan ikke angres.")){
-      data = {sessions:[], cardio:[], bodyweight:[], settings:{cardioDays:[]}};
+      var keepTarget = data.settings.calorieTarget;
+      data = emptyData();
+      if(keepTarget) data.settings.calorieTarget = keepTarget;
       saveData(data);
-      renderHistory();
-      renderExerciseList();
-      renderBodyweightReminder();
-      renderBodyweightSection();
-      renderCardioDayToggles();
-      renderCardioReminder();
+      renderAllViews();
       showToast("All data slettet");
     }
   }
@@ -1911,6 +2180,7 @@
     });
     if(viewName==="historikk") renderHistory();
     if(viewName==="fremgang") renderFremgang();
+    if(viewName==="kosthold") renderNutritionCalc();
     if(viewName==="innstillinger") refreshStravaStatus();
     if(viewName==="logg"){
       renderBodyweightReminder();
@@ -1947,11 +2217,17 @@
     restRemaining += 15;
     updateRestBar();
   });
+  document.getElementById("saveTargetBtn").addEventListener("click", saveCalorieTarget);
+  document.getElementById("addFoodDbBtn").addEventListener("click", addFoodFromDb);
+  document.getElementById("addCustomFoodBtn").addEventListener("click", addCustomFood);
+  document.getElementById("nutriDate").addEventListener("change", renderNutritionCalc);
 
   document.getElementById("sessionDate").value = todayStr();
   document.getElementById("cardioDate").value = todayStr();
   document.getElementById("bwDate").value = todayStr();
+  document.getElementById("nutriDate").value = todayStr();
 
+  populateFoodSelect();
   renderDayTabs();
   renderExerciseList();
   renderProgramDays();
@@ -1960,6 +2236,7 @@
   renderBodyweightSection();
   renderCardioDayToggles();
   renderCardioReminder();
+  renderNutritionCalc();
   initCloud();
 })();
 </script>
