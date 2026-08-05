@@ -351,6 +351,12 @@
       <div id="bwSummaryText" class="bw-summary-text"></div>
       <div id="bwSummaryChart"></div>
     </div>
+
+    <div class="card" id="nutriHistoryCard">
+      <h2>Kosthold</h2>
+      <div id="nutriHistoryChart"></div>
+      <div id="nutriHistoryList" style="margin-top:8px;"></div>
+    </div>
   </section>
 
   <!-- HISTORIKK -->
@@ -797,6 +803,14 @@
 
   function todayStr(){
     var d = new Date();
+    var m = String(d.getMonth()+1).padStart(2,"0");
+    var day = String(d.getDate()).padStart(2,"0");
+    return d.getFullYear() + "-" + m + "-" + day;
+  }
+
+  function offsetDateStr(deltaDays){
+    var d = new Date();
+    d.setDate(d.getDate() + deltaDays);
     var m = String(d.getMonth()+1).padStart(2,"0");
     var day = String(d.getDate()).padStart(2,"0");
     return d.getFullYear() + "-" + m + "-" + day;
@@ -1578,6 +1592,25 @@
       bwText.textContent = "Ingen kroppsvekt registrert enda.";
       bwChart.innerHTML = "";
     }
+
+    var nutriDays = dailyNutritionTotals();
+    var nutriChartEl = document.getElementById("nutriHistoryChart");
+    var nutriListEl = document.getElementById("nutriHistoryList");
+    var target = data.settings.calorieTarget || DEFAULT_CALORIE_TARGET;
+    if(nutriDays.length){
+      var chartPoints = nutriDays.slice(-12).map(function(d){ return {date:d.date, weight:Math.round(d.kcal)}; });
+      nutriChartEl.innerHTML = chartPoints.length >= 2 ? buildProgressChartHTML(chartPoints) : "";
+      nutriListEl.innerHTML = nutriDays.slice().reverse().slice(0, 10).map(function(d){
+        var parts = d.date.split("-");
+        var dm = parts[2]+"."+parts[1]+"."+parts[0];
+        var label = d.date === todayStr() ? "I dag ("+dm+")" : (d.date === offsetDateStr(-1) ? "I går ("+dm+")" : dm);
+        return '<div class="nutri-log-item"><div><div class="nutri-name">'+label+'</div>'+
+          '<div class="nutri-meta">'+Math.round(d.kcal)+' / '+target.kcal+' kcal · P '+Math.round(d.protein)+'g · F '+Math.round(d.fat)+'g · K '+Math.round(d.carbs)+'g</div></div></div>';
+      }).join("");
+    } else {
+      nutriChartEl.innerHTML = "";
+      nutriListEl.innerHTML = '<div class="empty">Ingen matvarer registrert i kalorikalkulatoren enda.</div>';
+    }
   }
 
   // ---------- HISTORIKK VIEW ----------
@@ -1820,6 +1853,23 @@
       totals.kcal += n.kcal; totals.protein += n.protein; totals.fat += n.fat; totals.carbs += n.carbs;
     });
     return totals;
+  }
+
+  // One totals row per date that has at least one logged item. Every food
+  // entry already carries the date it was logged for, so there is nothing
+  // that needs a separate "save at midnight" step - a day's numbers are
+  // complete and available as soon as it has entries.
+  function dailyNutritionTotals(){
+    var byDate = {};
+    data.nutritionLog.forEach(function(n){
+      if(!byDate[n.date]) byDate[n.date] = [];
+      byDate[n.date].push(n);
+    });
+    return Object.keys(byDate).sort().map(function(date){
+      var totals = sumNutrition(byDate[date]);
+      totals.date = date;
+      return totals;
+    });
   }
 
   function nutriProgressRow(label, value, target){
