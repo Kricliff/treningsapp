@@ -2063,6 +2063,14 @@
 
   function pickRandom(arr){ return arr[Math.floor(Math.random() * arr.length)]; }
 
+  // Random pick among the `n` cheapest items, so even the "budget is tight"
+  // fallback varies between clicks instead of always returning the single
+  // globally cheapest (and therefore identical every time) option.
+  function pickCheapish(arr, n){
+    var sorted = arr.slice().sort(function(a,b){ return a.kcal - b.kcal; });
+    return pickRandom(sorted.slice(0, Math.min(n, sorted.length)));
+  }
+
   function generateShoppingList(){
     var totals = sumNutrition(nutritionEntriesForDate(todayStr()));
     var target = data.settings.calorieTarget || DEFAULT_CALORIE_TARGET;
@@ -2076,9 +2084,9 @@
       }
     }
     if(!picked){
-      var minD = DINNER_OPTIONS.reduce(function(a,b){ return b.kcal < a.kcal ? b : a; });
-      var minS = SNACK_OPTIONS.reduce(function(a,b){ return b.kcal < a.kcal ? b : a; });
-      var minK = EVENING_OPTIONS.reduce(function(a,b){ return b.kcal < a.kcal ? b : a; });
+      var minD = pickCheapish(DINNER_OPTIONS, 3);
+      var minS = pickCheapish(SNACK_OPTIONS, 3);
+      var minK = pickCheapish(EVENING_OPTIONS, 3);
       picked = {dinner:minD, snack:minS, evening:minK, sum:minD.kcal+minS.kcal+minK.kcal, tooTight:true};
     }
     renderShoppingList(picked, remaining);
