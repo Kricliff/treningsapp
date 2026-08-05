@@ -1552,6 +1552,8 @@
       : "Nå ukens mål for å starte en ny rekke";
 
     document.getElementById("consistencyWrap").innerHTML = buildConsistencyGrid(12);
+    var gridScroll = document.querySelector("#consistencyWrap .grid-scroll");
+    if(gridScroll) gridScroll.scrollLeft = gridScroll.scrollWidth;
 
     var prList = document.getElementById("prList");
     var prEntries = Object.keys(prs).map(function(exId){
@@ -1790,42 +1792,70 @@
   // ---------- KALORIKALKULATOR ----------
   // kcal/protein/fett/karbo er per 100g. Grovt anslåtte, vanlige verdier -
   // ikke laboratorieanalyser, men gode nok til et daglig overslag.
+  // kcal/protein/fett/karbo er per 100g. Verdier kryssjekket mot
+  // Matvaretabellen.no (Mattilsynet/Helsedirektoratets offisielle norske
+  // ernæringsdatabase) der det finnes en direkte match, ellers vanlige
+  // internasjonale referanseverdier (USDA-nivå). Grovt anslag, ikke
+  // laboratorieanalyse av akkurat din matvare.
   var FOOD_DB = [
+    {name:"Agurk", kcal:15, protein:0.7, fat:0.1, carbs:3.6},
+    {name:"Appelsin", kcal:47, protein:0.9, fat:0.1, carbs:12},
     {name:"Avokado", kcal:160, protein:2, fat:15, carbs:9},
     {name:"Banan", kcal:89, protein:1.1, fat:0.3, carbs:23},
     {name:"Biff/indrefilet", kcal:201, protein:26, fat:10, carbs:0},
     {name:"Blandet salat", kcal:15, protein:1.4, fat:0.2, carbs:2.9},
     {name:"Blåbær", kcal:57, protein:0.7, fat:0.3, carbs:14},
+    {name:"Bulgur, kokt", kcal:90, protein:3, fat:0, carbs:15},
     {name:"Bønner, kokte", kcal:127, protein:9, fat:0.5, carbs:23},
-    {name:"Cottage cheese", kcal:98, protein:11, fat:4.3, carbs:3.4},
-    {name:"Egg", kcal:155, protein:13, fat:11, carbs:1.1},
+    {name:"Cashewnøtter", kcal:553, protein:18, fat:44, carbs:30},
+    {name:"Chiafrø", kcal:486, protein:17, fat:31, carbs:42},
+    {name:"Cottage cheese", kcal:97, protein:13, fat:4, carbs:1},
+    {name:"Druer", kcal:69, protein:0.7, fat:0.2, carbs:18},
+    {name:"Edamame, kokte", kcal:121, protein:11, fat:5, carbs:10},
+    {name:"Egg", kcal:150, protein:13, fat:10, carbs:1},
     {name:"Eple", kcal:52, protein:0.3, fat:0.2, carbs:14},
+    {name:"Fetaost", kcal:264, protein:14, fat:21, carbs:4},
     {name:"Fullkornsbrød", kcal:219, protein:9, fat:3, carbs:38},
+    {name:"Fullkornspasta, kokt", kcal:139, protein:4, fat:2, carbs:23},
     {name:"Gresk yoghurt", kcal:97, protein:9, fat:5, carbs:4},
     {name:"Gulrot", kcal:41, protein:0.9, fat:0.2, carbs:10},
-    {name:"Havregryn, tørr", kcal:389, protein:13, fat:7, carbs:66},
+    {name:"Havregryn, tørr", kcal:369, protein:14, fat:7, carbs:57},
     {name:"Helmelk", kcal:61, protein:3.4, fat:3.6, carbs:4.7},
+    {name:"Hummus", kcal:166, protein:8, fat:10, carbs:14},
+    {name:"Jordbær", kcal:32, protein:0.7, fat:0.3, carbs:7.7},
     {name:"Kalkunfilet", kcal:135, protein:29, fat:1, carbs:0},
+    {name:"Kalkunpålegg", kcal:100, protein:18, fat:2, carbs:1},
+    {name:"Kefir", kcal:41, protein:3.4, fat:1, carbs:4.8},
     {name:"Kesam", kcal:98, protein:12, fat:2, carbs:5},
+    {name:"Kiwi", kcal:61, protein:1.1, fat:0.5, carbs:15},
     {name:"Kjøttdeig 14%", kcal:220, protein:18, fat:14, carbs:0},
     {name:"Kjøttdeig 5% (mager)", kcal:137, protein:20, fat:5, carbs:0},
     {name:"Knekkebrød", kcal:380, protein:10, fat:2, carbs:70},
-    {name:"Kyllingfilet, stekt/kokt", kcal:165, protein:31, fat:3.6, carbs:0},
-    {name:"Laks", kcal:208, protein:20, fat:13, carbs:0},
+    {name:"Kyllingfilet, stekt/kokt", kcal:150, protein:29, fat:3, carbs:0},
+    {name:"Laks", kcal:207, protein:20, fat:13, carbs:0},
     {name:"Lettmelk", kcal:46, protein:3.4, fat:1, carbs:5},
+    {name:"Linfrø", kcal:534, protein:18, fat:42, carbs:29},
     {name:"Linser, kokte", kcal:116, protein:9, fat:0.4, carbs:20},
+    {name:"Makrell i tomat (hermetisk)", kcal:225, protein:11, fat:17, carbs:4},
     {name:"Mandler", kcal:579, protein:21, fat:50, carbs:22},
+    {name:"Mango", kcal:60, protein:0.8, fat:0.4, carbs:15},
+    {name:"Mozzarella, lett", kcal:250, protein:25, fat:17, carbs:2},
     {name:"Olivenolje", kcal:884, protein:0, fat:100, carbs:0},
+    {name:"Paprika", kcal:31, protein:1, fat:0.3, carbs:6},
     {name:"Pasta, kokt", kcal:131, protein:5, fat:1.1, carbs:25},
     {name:"Peanøttsmør", kcal:588, protein:25, fat:50, carbs:20},
-    {name:"Poteter, kokte", kcal:87, protein:2, fat:0.1, carbs:20},
+    {name:"Poteter, kokte", kcal:84, protein:2, fat:0.1, carbs:19},
     {name:"Proteinpulver (whey)", kcal:380, protein:75, fat:6, carbs:8},
     {name:"Quinoa, kokt", kcal:120, protein:4.4, fat:1.9, carbs:21},
     {name:"Reker", kcal:71, protein:13, fat:1, carbs:1},
     {name:"Ris, kokt", kcal:130, protein:2.4, fat:0.3, carbs:28},
+    {name:"Rugbrød", kcal:259, protein:8, fat:1.5, carbs:48},
+    {name:"Sild, marinert", kcal:200, protein:18, fat:13, carbs:5},
+    {name:"Spinat, rå", kcal:23, protein:2.9, fat:0.4, carbs:3.6},
     {name:"Svinefilet", kcal:143, protein:21, fat:6, carbs:0},
     {name:"Søtpotet, kokt", kcal:86, protein:1.6, fat:0.1, carbs:20},
     {name:"Tofu", kcal:76, protein:8, fat:4.8, carbs:1.9},
+    {name:"Tomat", kcal:18, protein:0.9, fat:0.2, carbs:3.9},
     {name:"Torsk", kcal:82, protein:18, fat:0.7, carbs:0},
     {name:"Tunfisk i vann (boks)", kcal:116, protein:26, fat:1, carbs:0},
     {name:"Valnøtter", kcal:654, protein:15, fat:65, carbs:14},
