@@ -238,6 +238,14 @@
   .legend-strength{background:var(--success);}
   .legend-cardio{background:var(--accent2);}
   .legend-empty{background:var(--card2);}
+  .muscle-map-wrap{position:relative;width:100%;border-radius:var(--radius);overflow:hidden;background:#050608;}
+  .muscle-map-img{display:block;width:100%;}
+  .muscle-dot{
+    position:absolute;width:10%;aspect-ratio:1/1;transform:translate(-50%,-50%);
+    border-radius:50%;pointer-events:none;background:transparent;transition:background .3s;
+  }
+  .muscle-dot.trained{background:radial-gradient(circle, rgba(249,115,22,.65) 0%, rgba(249,115,22,.28) 55%, rgba(249,115,22,0) 100%);}
+  .muscle-list{color:var(--muted);font-size:0.85rem;margin-top:10px;}
   .pr-item{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:0.88rem;}
   .pr-item:last-child{border-bottom:none;}
   .pr-name{color:var(--text);}
@@ -268,6 +276,36 @@
     <div id="bodyweightReminder" class="reminder-banner hidden"></div>
     <div id="cardioReminder" class="reminder-banner hidden"></div>
     <div class="daytabs" id="dayTabs"></div>
+
+    <div class="card">
+      <h2>Muskler trent i dag</h2>
+      <div class="muscle-map-wrap">
+        <img src="assets/kropp.png" alt="Kroppskart, forside og bakside" class="muscle-map-img">
+        <div class="muscle-dot" data-muscle="shoulders" style="left:26.6%;top:20.8%"></div>
+        <div class="muscle-dot" data-muscle="shoulders" style="left:38.2%;top:20.8%"></div>
+        <div class="muscle-dot" data-muscle="chest" style="left:32.8%;top:24.1%"></div>
+        <div class="muscle-dot" data-muscle="biceps" style="left:23.7%;top:32.6%"></div>
+        <div class="muscle-dot" data-muscle="biceps" style="left:41.9%;top:32.6%"></div>
+        <div class="muscle-dot" data-muscle="abs" style="left:32.8%;top:35.2%"></div>
+        <div class="muscle-dot" data-muscle="obliques" style="left:29.5%;top:35.2%"></div>
+        <div class="muscle-dot" data-muscle="obliques" style="left:36.1%;top:35.2%"></div>
+        <div class="muscle-dot" data-muscle="quads" style="left:30.3%;top:54.7%"></div>
+        <div class="muscle-dot" data-muscle="quads" style="left:35.3%;top:54.7%"></div>
+        <div class="muscle-dot" data-muscle="shoulders" style="left:61.4%;top:20.8%"></div>
+        <div class="muscle-dot" data-muscle="shoulders" style="left:73.0%;top:20.8%"></div>
+        <div class="muscle-dot" data-muscle="back" style="left:67.6%;top:22.1%"></div>
+        <div class="muscle-dot" data-muscle="back" style="left:67.6%;top:30.0%"></div>
+        <div class="muscle-dot" data-muscle="triceps" style="left:58.5%;top:32.6%"></div>
+        <div class="muscle-dot" data-muscle="triceps" style="left:76.8%;top:32.6%"></div>
+        <div class="muscle-dot" data-muscle="back" style="left:67.6%;top:37.8%"></div>
+        <div class="muscle-dot" data-muscle="glutes" style="left:67.6%;top:44.9%"></div>
+        <div class="muscle-dot" data-muscle="hamstrings" style="left:63.9%;top:56.0%"></div>
+        <div class="muscle-dot" data-muscle="hamstrings" style="left:71.4%;top:56.0%"></div>
+        <div class="muscle-dot" data-muscle="calves" style="left:63.9%;top:72.9%"></div>
+        <div class="muscle-dot" data-muscle="calves" style="left:71.4%;top:72.9%"></div>
+      </div>
+      <div class="muscle-list" id="muscleList">Fyll inn et sett for å se hvilke muskler du trener i dag.</div>
+    </div>
 
     <div class="card">
       <div class="field-row">
@@ -855,6 +893,52 @@
     return PROGRAM[0];
   }
 
+  // ---------- MUSKLER TRENT ----------
+  var MUSCLE_MAP = {
+    d1e1:["chest","triceps","shoulders"], d1e2:["back","biceps"], d1e3:["back","biceps"],
+    d1e4:["shoulders","triceps"], d1e5:["shoulders","back"], d1e6:["triceps"], d1e7:["abs","obliques"],
+    d2e1:["quads","glutes"], d2e3:["quads","glutes"], d2e5:["glutes","hamstrings"],
+    d2e2:["hamstrings"], d2e4:["back","glutes"], d2e6:["calves"],
+    d3e1:["chest","shoulders","triceps"], d3e2:["back","biceps"], d3e3:["shoulders"],
+    d3e4:["biceps"], d3e5:["abs"],
+    d4e1:["glutes","hamstrings"], d4e2:["glutes"], d4e3:["back","glutes"]
+  };
+  var MUSCLE_LABELS = {
+    chest:"Bryst", back:"Rygg", shoulders:"Skuldre", biceps:"Biceps", triceps:"Triceps",
+    abs:"Mage", obliques:"Skrå mage", quads:"Lår (forside)", hamstrings:"Lår (bakside)",
+    glutes:"Sete", calves:"Legger"
+  };
+
+  function computeTrainedMusclesToday(){
+    var muscles = {};
+    document.querySelectorAll("#exerciseList .exercise").forEach(function(exEl){
+      if(exEl.classList.contains("skipped")) return;
+      var exId = exEl.dataset.exerciseId;
+      var hasData = Array.from(exEl.querySelectorAll(".set-row")).some(function(row){
+        var w = row.querySelector(".weight-input").value;
+        var r = row.querySelector(".reps-input").value;
+        return w !== "" || r !== "";
+      });
+      if(hasData){
+        (MUSCLE_MAP[exId]||[]).forEach(function(m){ muscles[m] = true; });
+      }
+    });
+    return muscles;
+  }
+
+  function renderMuscleMap(){
+    var wrap = document.querySelector(".muscle-map-wrap");
+    if(!wrap) return;
+    var trained = computeTrainedMusclesToday();
+    wrap.querySelectorAll(".muscle-dot").forEach(function(dot){
+      dot.classList.toggle("trained", !!trained[dot.dataset.muscle]);
+    });
+    var names = Object.keys(trained).map(function(m){ return MUSCLE_LABELS[m] || m; });
+    document.getElementById("muscleList").textContent = names.length
+      ? "I dag: " + names.join(", ")
+      : "Fyll inn et sett for å se hvilke muskler du trener i dag.";
+  }
+
   function lastEntryForExercise(exerciseId){
     var sessions = data.sessions.slice().sort(function(a,b){return b.date.localeCompare(a.date) || (b.createdAt-a.createdAt);});
     for(var i=0;i<sessions.length;i++){
@@ -1224,11 +1308,13 @@
       skipBtn.addEventListener("click", function(){
         var skipped = wrap.classList.toggle("skipped");
         skipBtn.textContent = skipped ? "Ta med igjen" : "Hopp over";
+        renderMuscleMap();
       });
       head.querySelector(".exercise-head-sub").appendChild(skipBtn);
 
       container.appendChild(wrap);
     });
+    renderMuscleMap();
   }
 
   function addCustomExerciseBlock(){
@@ -2400,6 +2486,9 @@
   document.getElementById("addFoodDbBtn").addEventListener("click", addFoodFromDb);
   document.getElementById("addCustomFoodBtn").addEventListener("click", addCustomFood);
   document.getElementById("genShoppingListBtn").addEventListener("click", generateShoppingList);
+  document.getElementById("exerciseList").addEventListener("input", function(e){
+    if(e.target.classList.contains("weight-input") || e.target.classList.contains("reps-input")) renderMuscleMap();
+  });
   document.getElementById("nutriDate").addEventListener("change", renderNutritionCalc);
 
   document.getElementById("sessionDate").value = todayStr();
