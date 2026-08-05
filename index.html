@@ -22,6 +22,7 @@
     --muted:#9099a8;
     --accent:#2fd47a;
     --accent-dim:#1e6b45;
+    --accent-on-dim:#8ff0bd;
     --accent2:#4f8cff;
     --danger:#ff5a5a;
     --radius:14px;
@@ -95,9 +96,9 @@
   details.progress-toggle[open] summary:before{content:"📈 Skjul progresjon ";}
   .chart{display:flex;align-items:flex-end;gap:6px;height:76px;margin:8px 0 2px;}
   .chart-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;}
-  .chart-bar-val{font-size:0.62rem;color:var(--muted);margin-bottom:2px;white-space:nowrap;}
+  .chart-bar-val{font-size:0.72rem;color:var(--muted);margin-bottom:2px;white-space:nowrap;}
   .chart-bar{width:100%;max-width:22px;background:var(--accent2);border-radius:4px 4px 0 0;min-height:4px;}
-  .chart-bar-label{font-size:0.6rem;color:var(--muted);margin-top:3px;}
+  .chart-bar-label{font-size:0.7rem;color:var(--muted);margin-top:3px;}
   .optional-tag{color:var(--muted);font-weight:400;}
   .sets{margin-top:10px;display:flex;flex-direction:column;gap:8px;}
   .set-row{display:grid;grid-template-columns:28px 1fr 1fr;gap:8px;align-items:center;}
@@ -128,7 +129,7 @@
   }
   nav.bottom button{
     flex:1;background:none;border:none;color:var(--muted);padding:10px 4px 8px;
-    font-size:0.68rem;display:flex;flex-direction:column;align-items:center;gap:2px;
+    font-size:0.72rem;display:flex;flex-direction:column;align-items:center;gap:2px;
   }
   nav.bottom button .ic{font-size:1.3rem;}
   nav.bottom button.active{color:var(--accent);}
@@ -143,8 +144,11 @@
   .hist-detail table{width:100%;border-collapse:collapse;margin-bottom:8px;}
   .hist-detail td{padding:2px 4px;}
   .hist-detail .ex-name{color:var(--text);font-weight:600;}
-  .del-btn{color:var(--danger);font-size:0.75rem;background:none;border:none;padding:6px 0;}
-  .strava-btn{color:#fc4c02;font-size:0.75rem;background:none;border:none;padding:6px 0;display:block;font-weight:600;}
+  .del-btn{
+    color:var(--danger);font-size:0.8rem;background:transparent;border:1px solid var(--danger);
+    border-radius:8px;padding:6px 12px;margin-top:10px;
+  }
+  .strava-btn{color:#fc4c02;font-size:0.8rem;background:none;border:none;padding:6px 0;display:block;font-weight:600;}
   .toast{
     position:fixed;bottom:calc(90px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);
     background:var(--accent);color:#08130d;padding:10px 18px;border-radius:999px;
@@ -158,7 +162,7 @@
   select#cardioType{appearance:none;}
   .filehint{color:var(--muted);font-size:0.75rem;margin-top:4px;}
   .rest-btn{
-    background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent-dim);
+    background:var(--accent-dim);color:var(--accent-on-dim);border:1px solid var(--accent-dim);
     padding:6px 12px;border-radius:8px;font-size:0.8rem;
   }
   #restBar{
@@ -170,7 +174,7 @@
   #restBar.show{display:flex;}
   #restBar button{background:rgba(8,19,13,0.15);color:#08130d;border:none;border-radius:8px;padding:6px 12px;font-size:0.85rem;font-weight:600;}
   .reminder-banner{
-    background:var(--accent-dim);border:1px solid var(--accent);color:var(--accent);
+    background:var(--accent-dim);border:1px solid var(--accent);color:var(--accent-on-dim);
     border-radius:var(--radius);padding:12px 14px;margin-bottom:14px;
     font-size:0.85rem;font-weight:600;display:flex;align-items:center;gap:8px;cursor:pointer;
   }
@@ -178,9 +182,11 @@
   .stat-row{display:flex;gap:8px;margin-bottom:12px;}
   .stat-tile{flex:1;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 6px;text-align:center;}
   .stat-num{font-size:1.25rem;font-weight:700;color:var(--accent);line-height:1.15;}
-  .stat-label{font-size:0.65rem;color:var(--muted);margin-top:4px;}
+  .stat-label{font-size:0.72rem;color:var(--muted);margin-top:4px;}
   .weekbar{background:var(--card2);border-radius:999px;height:14px;overflow:hidden;}
-  .weekbar-fill{background:var(--accent);height:100%;border-radius:999px;transition:width .3s;}
+  .weekbar-fill{background:var(--accent);height:100%;width:100%;border-radius:999px;transform-origin:left center;transition:transform .3s;}
+  .weekbar-fill.over{background:var(--danger);}
+  .over-tag{color:var(--danger);font-weight:600;font-size:0.7rem;}
   .weekbar-label{margin-top:8px;font-size:0.85rem;color:var(--muted);}
   .target-edit{display:flex;gap:8px;}
   .target-edit > div{flex:1;min-width:0;}
@@ -201,6 +207,12 @@
   .shopping-list label{display:flex;align-items:center;gap:8px;cursor:pointer;}
   .shopping-list input[type=checkbox]{width:auto;flex:0 0 auto;}
   .streak-line{margin-top:6px;font-size:0.85rem;color:var(--text);}
+  .consistency-body{display:flex;gap:5px;}
+  .grid-daylabels{display:flex;flex-direction:column;gap:3px;flex:0 0 auto;}
+  .grid-daylabel-spacer{height:14px;}
+  .grid-daylabel{height:12px;line-height:12px;font-size:0.72rem;color:var(--muted);}
+  .grid-month-row{display:flex;gap:3px;width:max-content;height:14px;margin-bottom:2px;}
+  .grid-month-label{width:12px;font-size:0.72rem;color:var(--muted);white-space:nowrap;line-height:14px;}
   .grid-scroll{overflow-x:auto;padding-bottom:2px;}
   .grid-rows{display:flex;gap:3px;width:max-content;}
   .grid-col{display:flex;flex-direction:column;gap:3px;}
@@ -217,7 +229,7 @@
   .pr-item:last-child{border-bottom:none;}
   .pr-name{color:var(--text);}
   .pr-val{color:var(--muted);font-variant-numeric:tabular-nums;}
-  .pr-recent{color:var(--accent);font-size:0.68rem;font-weight:700;margin-left:6px;}
+  .pr-recent{color:var(--accent);font-size:0.72rem;font-weight:700;margin-left:6px;}
   .improve-item{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:0.85rem;}
   .improve-item:last-child{border-bottom:none;}
   .improve-delta{color:var(--accent);font-weight:700;}
@@ -232,7 +244,7 @@
 <header class="app">
   <div>
     <h1>Treningslogg</h1>
-    <div class="sub">Muskelbygging &amp; fettforbrenning</div>
+    <div class="sub" id="headerSub">Logg</div>
   </div>
 </header>
 
@@ -321,7 +333,7 @@
 
     <div class="card">
       <h2>Ukens mål</h2>
-      <div class="weekbar"><div class="weekbar-fill" id="weekbarFill" style="width:0%"></div></div>
+      <div class="weekbar"><div class="weekbar-fill" id="weekbarFill" style="transform:scaleX(0)"></div></div>
       <div class="weekbar-label" id="weekbarLabel"></div>
       <div class="streak-line" id="streakLine"></div>
     </div>
@@ -1469,6 +1481,9 @@
     return Math.round(total);
   }
 
+  var MONTH_ABBR = ["jan","feb","mar","apr","mai","jun","jul","aug","sep","okt","nov","des"];
+  var DAY_LABELS = ["Ma","Ti","On","To","Fr","Lø","Sø"];
+
   function buildConsistencyGrid(weeksCount){
     var today = new Date(); today.setHours(0,0,0,0);
     var startMonday = startOfWeek(today);
@@ -1479,9 +1494,14 @@
     data.cardio.forEach(function(c){ cardioDates[c.date] = true; });
 
     var weeksHtml = "";
+    var monthHtml = "";
+    var lastMonth = -1;
     for(var w=0; w<weeksCount; w++){
       var colStart = new Date(startMonday);
       colStart.setDate(colStart.getDate() + 7*w);
+      var m = colStart.getMonth();
+      monthHtml += '<div class="grid-month-label">'+(m!==lastMonth ? MONTH_ABBR[m] : "")+'</div>';
+      lastMonth = m;
       var daysHtml = "";
       for(var d=0; d<7; d++){
         var day = new Date(colStart);
@@ -1496,7 +1516,12 @@
       }
       weeksHtml += '<div class="grid-col">'+daysHtml+'</div>';
     }
-    return '<div class="grid-scroll"><div class="grid-rows">'+weeksHtml+'</div></div>';
+    var dayLabelsHtml = '<div class="grid-daylabel-spacer"></div>' +
+      DAY_LABELS.map(function(l){ return '<div class="grid-daylabel">'+l+'</div>'; }).join("");
+    return '<div class="consistency-body">' +
+      '<div class="grid-daylabels">'+dayLabelsHtml+'</div>' +
+      '<div class="grid-scroll"><div class="grid-month-row">'+monthHtml+'</div><div class="grid-rows">'+weeksHtml+'</div></div>' +
+      '</div>';
   }
 
   function computeMotivationMessage(){
@@ -1544,7 +1569,7 @@
 
     var thisWeek = currentWeekCount();
     var pct = Math.min(100, Math.round((thisWeek/WEEKLY_GOAL)*100));
-    document.getElementById("weekbarFill").style.width = pct+"%";
+    document.getElementById("weekbarFill").style.transform = "scaleX(" + (pct/100) + ")";
     document.getElementById("weekbarLabel").textContent = thisWeek + " av " + WEEKLY_GOAL + "-4 økter denne uken";
     var streak = computeWeeklyStreak();
     document.getElementById("streakLine").textContent = streak>0
@@ -1903,11 +1928,13 @@
   }
 
   function nutriProgressRow(label, value, target){
-    var pct = target > 0 ? Math.min(100, Math.round(value / target * 100)) : 0;
+    var rawPct = target > 0 ? (value / target * 100) : 0;
+    var pct = Math.min(100, Math.round(rawPct));
+    var isOver = rawPct > 100;
     var div = document.createElement("div");
     div.className = "nutri-progress-item";
-    div.innerHTML = '<div class="weekbar-label">'+label+': '+Math.round(value)+' / '+Math.round(target)+'</div>'+
-      '<div class="weekbar"><div class="weekbar-fill" style="width:'+pct+'%;"></div></div>';
+    div.innerHTML = '<div class="weekbar-label">'+label+': '+Math.round(value)+' / '+Math.round(target)+(isOver ? ' <span class="over-tag">over</span>' : '')+'</div>'+
+      '<div class="weekbar"><div class="weekbar-fill'+(isOver ? ' over' : '')+'" style="transform:scaleX('+(pct/100)+');"></div></div>';
     return div;
   }
 
@@ -1971,6 +1998,14 @@
     var carbs = parseFloat(document.getElementById("targetCarbs").value);
     if([kcal, protein, fat, carbs].some(function(v){ return isNaN(v) || v < 0; })){
       showToast("Fyll inn gyldige tall for målet");
+      return;
+    }
+    if(kcal < 800 || kcal > 6000){
+      showToast("kcal-målet bør være mellom 800 og 6000");
+      return;
+    }
+    if(protein > 400 || fat > 300 || carbs > 800){
+      showToast("Sjekk tallene, ett av dem virker urealistisk høyt");
       return;
     }
     data.settings.calorieTarget = {kcal:kcal, protein:protein, fat:fat, carbs:carbs};
@@ -2296,6 +2331,11 @@
   }
 
   // ---------- NAV ----------
+  var VIEW_LABELS = {
+    logg: "Logg", fremgang: "Fremgang", historikk: "Historikk",
+    program: "Program", kosthold: "Kosthold", innstillinger: "Innstillinger"
+  };
+
   function switchView(viewName){
     ["logg","fremgang","historikk","program","kosthold","innstillinger"].forEach(function(v){
       document.getElementById("view-"+v).classList.toggle("hidden", v!==viewName);
@@ -2303,6 +2343,7 @@
     document.querySelectorAll("nav.bottom button").forEach(function(b){
       b.classList.toggle("active", b.dataset.view===viewName);
     });
+    document.getElementById("headerSub").textContent = VIEW_LABELS[viewName] || "";
     if(viewName==="historikk") renderHistory();
     if(viewName==="fremgang") renderFremgang();
     if(viewName==="kosthold") renderNutritionCalc();
