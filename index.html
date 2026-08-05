@@ -9,6 +9,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Trening">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>%F0%9F%92%AA</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -20,15 +23,24 @@
     --border:#2a2f3a;
     --text:#eef0f4;
     --muted:#9099a8;
-    --accent:#2fd47a;
-    --accent-dim:#1e6b45;
-    --accent-on-dim:#8ff0bd;
+    --accent:#F97316;
+    --accent-dim:#4a2a12;
+    --accent-on-dim:#fbb87e;
+    --success:#22C55E;
     --accent2:#4f8cff;
     --danger:#ff5a5a;
     --radius:14px;
+    --font-display:'Barlow Condensed',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;}
+  input[type=checkbox]{accent-color:var(--accent);}
+  @media (prefers-reduced-motion: no-preference){
+    button, .daytabs button, nav.bottom button{transition:transform .1s ease-out;}
+    button:active, .daytabs button:active, nav.bottom button:active{transform:scale(0.96);}
+    @keyframes pop-in{0%{opacity:0;transform:scale(0.94) translateY(4px);}100%{opacity:1;transform:scale(1) translateY(0);}}
+    #motivCard{animation:pop-in .35s ease-out;}
+  }
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:'Barlow',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;}
   body{
     padding-bottom:calc(78px + env(safe-area-inset-bottom));
     padding-top:env(safe-area-inset-top);
@@ -38,9 +50,9 @@
     max-width:520px;margin:0 auto;padding:18px 16px 8px;
     display:flex;align-items:center;justify-content:space-between;
   }
-  header.app h1{font-size:1.3rem;margin:0;}
-  header.app .sub{color:var(--muted);font-size:0.8rem;}
-  h2{font-size:1.05rem;margin:0 0 10px;color:var(--text);}
+  header.app h1{font-family:var(--font-display);font-size:1.9rem;font-weight:700;letter-spacing:0.01em;margin:0;line-height:1;}
+  header.app .sub{color:var(--accent);font-size:0.85rem;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;margin-top:2px;}
+  h2{font-family:var(--font-display);font-size:1.3rem;font-weight:600;margin:0 0 10px;color:var(--text);letter-spacing:0.01em;}
   h3{font-size:0.95rem;margin:0 0 6px;}
   .card{
     background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
@@ -171,6 +183,7 @@
     display:none;align-items:center;justify-content:center;gap:16px;
     padding:10px 16px;font-weight:700;font-size:1rem;
   }
+  #restBarTime{font-family:var(--font-display);font-size:1.4rem;font-weight:700;letter-spacing:0.02em;}
   #restBar.show{display:flex;}
   #restBar button{background:rgba(8,19,13,0.15);color:#08130d;border:none;border-radius:8px;padding:6px 12px;font-size:0.85rem;font-weight:600;}
   .reminder-banner{
@@ -178,10 +191,10 @@
     border-radius:var(--radius);padding:12px 14px;margin-bottom:14px;
     font-size:0.85rem;font-weight:600;display:flex;align-items:center;gap:8px;cursor:pointer;
   }
-  .motiv-msg{font-size:1rem;font-weight:700;color:var(--accent);line-height:1.4;}
+  .motiv-msg{font-size:1rem;font-weight:700;color:var(--success);line-height:1.4;}
   .stat-row{display:flex;gap:8px;margin-bottom:12px;}
   .stat-tile{flex:1;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 6px;text-align:center;}
-  .stat-num{font-size:1.25rem;font-weight:700;color:var(--accent);line-height:1.15;}
+  .stat-num{font-family:var(--font-display);font-size:1.55rem;font-weight:700;color:var(--accent);line-height:1.1;}
   .stat-label{font-size:0.72rem;color:var(--muted);margin-top:4px;}
   .weekbar{background:var(--card2);border-radius:999px;height:14px;overflow:hidden;}
   .weekbar-fill{background:var(--accent);height:100%;width:100%;border-radius:999px;transform-origin:left center;transition:transform .3s;}
@@ -217,22 +230,22 @@
   .grid-rows{display:flex;gap:3px;width:max-content;}
   .grid-col{display:flex;flex-direction:column;gap:3px;}
   .grid-cell{width:12px;height:12px;border-radius:3px;background:var(--card2);}
-  .grid-cell.grid-strength{background:var(--accent);}
+  .grid-cell.grid-strength{background:var(--success);}
   .grid-cell.grid-cardio{background:var(--accent2);}
   .grid-cell.grid-future{background:transparent;}
   .legend{display:flex;gap:14px;margin-top:10px;font-size:0.72rem;color:var(--muted);flex-wrap:wrap;}
   .legend-dot{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:4px;vertical-align:middle;}
-  .legend-strength{background:var(--accent);}
+  .legend-strength{background:var(--success);}
   .legend-cardio{background:var(--accent2);}
   .legend-empty{background:var(--card2);}
   .pr-item{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:0.88rem;}
   .pr-item:last-child{border-bottom:none;}
   .pr-name{color:var(--text);}
   .pr-val{color:var(--muted);font-variant-numeric:tabular-nums;}
-  .pr-recent{color:var(--accent);font-size:0.72rem;font-weight:700;margin-left:6px;}
+  .pr-recent{color:var(--success);font-size:0.72rem;font-weight:700;margin-left:6px;}
   .improve-item{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:0.85rem;}
   .improve-item:last-child{border-bottom:none;}
-  .improve-delta{color:var(--accent);font-weight:700;}
+  .improve-delta{color:var(--success);font-weight:700;}
   .bw-summary-text{color:var(--muted);font-size:0.85rem;margin-bottom:6px;line-height:1.5;}
   .howto-text{color:var(--muted);font-size:0.8rem;line-height:1.5;margin:6px 0 0;}
   .video-link{color:var(--accent2);font-size:0.8rem;display:inline-block;margin-top:8px;text-decoration:none;}
