@@ -106,6 +106,9 @@
   details.cues-toggle[open] summary:before{content:"Skjul tips ";}
   details.progress-toggle summary:before{content:"📈 Vis progresjon ";}
   details.progress-toggle[open] summary:before{content:"📈 Skjul progresjon ";}
+  details.muscle-toggle summary:before{content:"Vis muskler trent ";}
+  details.muscle-toggle[open] summary:before{content:"Skjul muskler trent ";}
+  details.muscle-toggle{margin-bottom:8px;}
   .chart{display:flex;align-items:flex-end;gap:6px;height:76px;margin:8px 0 2px;}
   .chart-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;}
   .chart-bar-val{font-size:0.72rem;color:var(--muted);margin-bottom:2px;white-space:nowrap;}
@@ -238,7 +241,7 @@
   .legend-strength{background:var(--success);}
   .legend-cardio{background:var(--accent2);}
   .legend-empty{background:var(--card2);}
-  .muscle-map-wrap{width:100%;border-radius:var(--radius);overflow:hidden;background:#07090c;padding:10px 0;}
+  .muscle-map-wrap{width:100%;border-radius:var(--radius);overflow:hidden;background:#07090c;padding:10px 0;margin-top:8px;}
   .muscle-svg-body{display:block;width:100%;height:auto;}
   .muscle-outline{fill:none;stroke:#dfe6ec;stroke-width:2;stroke-linejoin:round;}
   .muscle-region{
@@ -282,77 +285,6 @@
     <div id="cardioReminder" class="reminder-banner hidden"></div>
     <div class="daytabs" id="dayTabs"></div>
 
-    <div class="card">
-      <h2>Muskler trent i dag</h2>
-      <div class="muscle-map-wrap">
-        <svg class="muscle-svg-body" viewBox="0 0 420 420" role="img" aria-label="Kroppskart som viser hvilke muskelgrupper som er trent">
-          <defs>
-            <path id="bodySilhouette" d="M105,6 C118,6 125,15 125,29 C125,42 120,50 115,54 C115,57 114,60 114,64
-              C126,66 136,69 145,74 C156,80 164,88 166,100 C168,116 168,128 168,142 C168,154 167,164 166,172
-              C165,186 164,197 162,208 C160,217 158,225 156,232 C155,240 155,246 153,249 C149,251 146,250 145,247
-              C145,241 146,236 146,231 C145,222 144,214 143,206 C142,195 141,183 141,172 C140,158 139,144 137,132
-              C135,124 134,118 132,112 C130,128 129,142 128,152 C125,161 122,168 120,176 C123,186 128,194 132,202
-              C136,214 139,226 140,240 C138,258 134,280 131,296 C130,310 130,321 130,334 C127,350 123,364 121,374
-              C124,381 129,386 131,390 C131,392 129,393 127,393 L110,393 C108,392 107,391 108,390
-              C108,384 109,378 109,374 C109,358 110,346 110,334 C110,321 109,308 108,296 C108,278 107,256 107,238
-              C106,228 106,220 105,214 C104,220 104,228 103,238 C103,256 102,278 102,296 C101,308 100,321 100,334
-              C100,346 101,358 101,374 C101,378 102,384 102,390 C103,391 102,392 100,393 L83,393
-              C81,393 79,392 79,390 C81,386 86,381 89,374 C87,364 83,350 80,334 C80,321 80,310 79,296
-              C76,280 72,258 70,240 C71,226 74,214 78,202 C82,194 87,186 90,176 C88,168 85,161 82,152
-              C81,142 80,128 78,112 C76,118 75,124 73,132 C71,144 70,158 69,172 C69,183 68,195 67,206
-              C66,214 65,222 64,231 C64,236 65,241 65,247 C64,250 61,251 57,249 C55,246 55,240 54,232
-              C52,225 50,217 48,208 C46,197 45,186 44,172 C43,164 42,154 42,142 C42,128 42,116 44,100
-              C46,88 54,80 65,74 C74,69 84,66 96,64 C96,60 95,57 95,54 C90,50 85,42 85,29 C85,15 92,6 105,6 Z"/>
-          </defs>
-
-          <!-- FORSIDE -->
-          <g>
-            <use href="#bodySilhouette" class="muscle-outline"/>
-            <path class="muscle-region" data-muscle="traps" d="M96,65 C89,67 82,70 75,76 C79,81 85,84 92,84 C95,79 96,71 96,65 Z"/>
-            <path class="muscle-region" data-muscle="traps" d="M114,65 C121,67 128,70 135,76 C131,81 125,84 118,84 C115,79 114,71 114,65 Z"/>
-            <path class="muscle-region" data-muscle="shoulders" d="M73,76 C62,81 53,90 50,102 C49,112 51,120 56,124 C63,120 70,109 73,96 C74,87 74,81 73,76 Z"/>
-            <path class="muscle-region" data-muscle="shoulders" d="M137,76 C148,81 157,90 160,102 C161,112 159,120 154,124 C147,120 140,109 137,96 C136,87 136,81 137,76 Z"/>
-            <path class="muscle-region" data-muscle="chest" d="M102,74 C92,76 83,82 77,90 C75,99 77,110 83,117 C90,122 97,122 102,120 Z"/>
-            <path class="muscle-region" data-muscle="chest" d="M108,74 C118,76 127,82 133,90 C135,99 133,110 127,117 C120,122 113,122 108,120 Z"/>
-            <path class="muscle-region" data-muscle="biceps" d="M71,128 C62,132 56,141 55,152 C54,163 57,171 61,176 C65,172 69,161 70,150 C71,140 71,133 71,128 Z"/>
-            <path class="muscle-region" data-muscle="biceps" d="M139,128 C148,132 154,141 155,152 C156,163 153,171 149,176 C145,172 141,161 140,150 C139,140 139,133 139,128 Z"/>
-            <path class="muscle-region" data-muscle="forearms" d="M66,182 C59,188 54,198 53,210 C53,220 55,228 58,234 C61,228 63,218 64,208 C65,198 66,188 66,182 Z"/>
-            <path class="muscle-region" data-muscle="forearms" d="M144,182 C151,188 156,198 157,210 C157,220 155,228 152,234 C149,228 147,218 146,208 C145,198 144,188 144,182 Z"/>
-            <path class="muscle-region" data-muscle="abs" d="M95,126 C102,124 108,124 115,126 C117,138 118,152 117,164 C116,176 111,186 105,192 C99,186 94,176 93,164 C92,152 93,138 95,126 Z"/>
-            <path class="muscle-region" data-muscle="obliques" d="M93,128 C89,131 87,137 86,145 C85,155 87,164 91,172 C93,176 95,178 97,178 C94,167 93,155 93,144 Z"/>
-            <path class="muscle-region" data-muscle="obliques" d="M117,128 C121,131 123,137 124,145 C125,155 123,164 119,172 C117,176 115,178 113,178 C116,167 117,155 117,144 Z"/>
-            <path class="muscle-region" data-muscle="quads" d="M102,210 C91,215 82,226 78,242 C76,260 79,278 84,290 C89,296 94,297 97,295 C99,280 100,262 101,244 Z"/>
-            <path class="muscle-region" data-muscle="quads" d="M108,210 C119,215 128,226 132,242 C134,260 131,278 126,290 C121,296 116,297 113,295 C111,280 110,262 109,244 Z"/>
-            <path class="muscle-region" data-muscle="calves" d="M97,302 C90,308 85,318 85,334 C85,348 88,360 91,368 C95,362 97,348 97,334 Z"/>
-            <path class="muscle-region" data-muscle="calves" d="M113,302 C120,308 125,318 125,334 C125,348 122,360 119,368 C115,362 113,348 113,334 Z"/>
-            <text x="105" y="411" class="muscle-map-caption">Forside</text>
-          </g>
-
-          <!-- BAKSIDE -->
-          <g transform="translate(210,0)">
-            <use href="#bodySilhouette" class="muscle-outline"/>
-            <path class="muscle-region" data-muscle="traps" d="M105,64 C96,64 87,68 76,76 C87,79 96,83 100,91 C102,101 103,113 105,123 C107,113 108,101 110,91 C114,83 123,79 134,76 C123,68 114,64 105,64 Z"/>
-            <path class="muscle-region" data-muscle="shoulders" d="M73,76 C62,81 53,90 50,102 C49,112 51,120 56,124 C63,120 70,109 73,96 C74,87 74,81 73,76 Z"/>
-            <path class="muscle-region" data-muscle="shoulders" d="M137,76 C148,81 157,90 160,102 C161,112 159,120 154,124 C147,120 140,109 137,96 C136,87 136,81 137,76 Z"/>
-            <path class="muscle-region" data-muscle="back" d="M99,95 C91,99 85,106 82,114 C81,127 84,141 90,154 C95,162 98,166 100,166 C100,144 99,120 99,95 Z"/>
-            <path class="muscle-region" data-muscle="back" d="M111,95 C119,99 125,106 128,114 C129,127 126,141 120,154 C115,162 112,166 110,166 C110,144 111,120 111,95 Z"/>
-            <path class="muscle-region" data-muscle="back" d="M98,170 C102,169 108,169 112,170 C114,180 114,190 112,198 C108,200 102,200 98,198 C96,190 96,180 98,170 Z"/>
-            <path class="muscle-region" data-muscle="triceps" d="M71,126 C62,130 56,139 55,150 C54,162 57,170 61,175 C65,170 69,159 70,148 C71,138 71,131 71,126 Z"/>
-            <path class="muscle-region" data-muscle="triceps" d="M139,126 C148,130 154,139 155,150 C156,162 153,170 149,175 C145,170 141,159 140,148 C139,138 139,131 139,126 Z"/>
-            <path class="muscle-region" data-muscle="forearms" d="M66,182 C59,188 54,198 53,210 C53,220 55,228 58,234 C61,228 63,218 64,208 C65,198 66,188 66,182 Z"/>
-            <path class="muscle-region" data-muscle="forearms" d="M144,182 C151,188 156,198 157,210 C157,220 155,228 152,234 C149,228 147,218 146,208 C145,198 144,188 144,182 Z"/>
-            <path class="muscle-region" data-muscle="glutes" d="M104,199 C92,200 83,208 80,219 C79,229 82,237 89,242 C95,244 99,243 102,239 C103,228 104,213 104,199 Z"/>
-            <path class="muscle-region" data-muscle="glutes" d="M106,199 C118,200 127,208 130,219 C131,229 128,237 121,242 C115,244 111,243 108,239 C107,228 106,213 106,199 Z"/>
-            <path class="muscle-region" data-muscle="hamstrings" d="M102,247 C92,250 84,259 80,272 C79,284 82,294 86,300 C91,296 96,286 99,274 C100,264 101,254 102,247 Z"/>
-            <path class="muscle-region" data-muscle="hamstrings" d="M108,247 C118,250 126,259 130,272 C131,284 128,294 124,300 C119,296 114,286 111,274 C110,264 109,254 108,247 Z"/>
-            <path class="muscle-region" data-muscle="calves" d="M99,300 C90,305 84,315 84,330 C84,344 88,356 93,363 C97,354 99,342 99,328 Z"/>
-            <path class="muscle-region" data-muscle="calves" d="M111,300 C120,305 126,315 126,330 C126,344 122,356 117,363 C113,354 111,342 111,328 Z"/>
-            <text x="105" y="411" class="muscle-map-caption">Bakside</text>
-          </g>
-        </svg>
-      </div>
-      <div class="muscle-list" id="muscleList">Fyll inn et sett for å se hvilke muskler du trener i dag.</div>
-    </div>
 
     <div class="card">
       <div class="field-row">
@@ -957,34 +889,68 @@
     quads:"Lår (forside)", hamstrings:"Lår (bakside)", glutes:"Sete", calves:"Legger"
   };
 
-  function computeTrainedMusclesToday(){
+  var BODY_SILHOUETTE = "M105,6 C118,6 125,15 125,29 C125,42 120,50 115,54 C115,57 114,60 114,64 C126,66 136,69 145,74 C156,80 164,88 166,100 C168,116 168,128 168,142 C168,154 167,164 166,172 C165,186 164,197 162,208 C160,217 158,225 156,232 C155,240 155,246 153,249 C149,251 146,250 145,247 C145,241 146,236 146,231 C145,222 144,214 143,206 C142,195 141,183 141,172 C140,158 139,144 137,132 C135,124 134,118 132,112 C130,128 129,142 128,152 C125,161 122,168 120,176 C123,186 128,194 132,202 C136,214 139,226 140,240 C138,258 134,280 131,296 C130,310 130,321 130,334 C127,350 123,364 121,374 C124,381 129,386 131,390 C131,392 129,393 127,393 L110,393 C108,392 107,391 108,390 C108,384 109,378 109,374 C109,358 110,346 110,334 C110,321 109,308 108,296 C108,278 107,256 107,238 C106,228 106,220 105,214 C104,220 104,228 103,238 C103,256 102,278 102,296 C101,308 100,321 100,334 C100,346 101,358 101,374 C101,378 102,384 102,390 C103,391 102,392 100,393 L83,393 C81,393 79,392 79,390 C81,386 86,381 89,374 C87,364 83,350 80,334 C80,321 80,310 79,296 C76,280 72,258 70,240 C71,226 74,214 78,202 C82,194 87,186 90,176 C88,168 85,161 82,152 C81,142 80,128 78,112 C76,118 75,124 73,132 C71,144 70,158 69,172 C69,183 68,195 67,206 C66,214 65,222 64,231 C64,236 65,241 65,247 C64,250 61,251 57,249 C55,246 55,240 54,232 C52,225 50,217 48,208 C46,197 45,186 44,172 C43,164 42,154 42,142 C42,128 42,116 44,100 C46,88 54,80 65,74 C74,69 84,66 96,64 C96,60 95,57 95,54 C90,50 85,42 85,29 C85,15 92,6 105,6 Z";
+
+  var MUSCLE_SHAPES_FRONT = [
+    ["traps","M96,65 C89,67 82,70 75,76 C79,81 85,84 92,84 C95,79 96,71 96,65 Z"],
+    ["traps","M114,65 C121,67 128,70 135,76 C131,81 125,84 118,84 C115,79 114,71 114,65 Z"],
+    ["shoulders","M73,76 C62,81 53,90 50,102 C49,112 51,120 56,124 C63,120 70,109 73,96 C74,87 74,81 73,76 Z"],
+    ["shoulders","M137,76 C148,81 157,90 160,102 C161,112 159,120 154,124 C147,120 140,109 137,96 C136,87 136,81 137,76 Z"],
+    ["chest","M102,74 C92,76 83,82 77,90 C75,99 77,110 83,117 C90,122 97,122 102,120 Z"],
+    ["chest","M108,74 C118,76 127,82 133,90 C135,99 133,110 127,117 C120,122 113,122 108,120 Z"],
+    ["biceps","M71,128 C62,132 56,141 55,152 C54,163 57,171 61,176 C65,172 69,161 70,150 C71,140 71,133 71,128 Z"],
+    ["biceps","M139,128 C148,132 154,141 155,152 C156,163 153,171 149,176 C145,172 141,161 140,150 C139,140 139,133 139,128 Z"],
+    ["forearms","M66,182 C59,188 54,198 53,210 C53,220 55,228 58,234 C61,228 63,218 64,208 C65,198 66,188 66,182 Z"],
+    ["forearms","M144,182 C151,188 156,198 157,210 C157,220 155,228 152,234 C149,228 147,218 146,208 C145,198 144,188 144,182 Z"],
+    ["abs","M95,126 C102,124 108,124 115,126 C117,138 118,152 117,164 C116,176 111,186 105,192 C99,186 94,176 93,164 C92,152 93,138 95,126 Z"],
+    ["obliques","M93,128 C89,131 87,137 86,145 C85,155 87,164 91,172 C93,176 95,178 97,178 C94,167 93,155 93,144 Z"],
+    ["obliques","M117,128 C121,131 123,137 124,145 C125,155 123,164 119,172 C117,176 115,178 113,178 C116,167 117,155 117,144 Z"],
+    ["quads","M102,210 C91,215 82,226 78,242 C76,260 79,278 84,290 C89,296 94,297 97,295 C99,280 100,262 101,244 Z"],
+    ["quads","M108,210 C119,215 128,226 132,242 C134,260 131,278 126,290 C121,296 116,297 113,295 C111,280 110,262 109,244 Z"],
+    ["calves","M97,302 C90,308 85,318 85,334 C85,348 88,360 91,368 C95,362 97,348 97,334 Z"],
+    ["calves","M113,302 C120,308 125,318 125,334 C125,348 122,360 119,368 C115,362 113,348 113,334 Z"]
+  ];
+
+  var MUSCLE_SHAPES_BACK = [
+    ["traps","M105,64 C96,64 87,68 76,76 C87,79 96,83 100,91 C102,101 103,113 105,123 C107,113 108,101 110,91 C114,83 123,79 134,76 C123,68 114,64 105,64 Z"],
+    ["shoulders","M73,76 C62,81 53,90 50,102 C49,112 51,120 56,124 C63,120 70,109 73,96 C74,87 74,81 73,76 Z"],
+    ["shoulders","M137,76 C148,81 157,90 160,102 C161,112 159,120 154,124 C147,120 140,109 137,96 C136,87 136,81 137,76 Z"],
+    ["back","M99,95 C91,99 85,106 82,114 C81,127 84,141 90,154 C95,162 98,166 100,166 C100,144 99,120 99,95 Z"],
+    ["back","M111,95 C119,99 125,106 128,114 C129,127 126,141 120,154 C115,162 112,166 110,166 C110,144 111,120 111,95 Z"],
+    ["back","M98,170 C102,169 108,169 112,170 C114,180 114,190 112,198 C108,200 102,200 98,198 C96,190 96,180 98,170 Z"],
+    ["triceps","M71,126 C62,130 56,139 55,150 C54,162 57,170 61,175 C65,170 69,159 70,148 C71,138 71,131 71,126 Z"],
+    ["triceps","M139,126 C148,130 154,139 155,150 C156,162 153,170 149,175 C145,170 141,159 140,148 C139,138 139,131 139,126 Z"],
+    ["forearms","M66,182 C59,188 54,198 53,210 C53,220 55,228 58,234 C61,228 63,218 64,208 C65,198 66,188 66,182 Z"],
+    ["forearms","M144,182 C151,188 156,198 157,210 C157,220 155,228 152,234 C149,228 147,218 146,208 C145,198 144,188 144,182 Z"],
+    ["glutes","M104,199 C92,200 83,208 80,219 C79,229 82,237 89,242 C95,244 99,243 102,239 C103,228 104,213 104,199 Z"],
+    ["glutes","M106,199 C118,200 127,208 130,219 C131,229 128,237 121,242 C115,244 111,243 108,239 C107,228 106,213 106,199 Z"],
+    ["hamstrings","M102,247 C92,250 84,259 80,272 C79,284 82,294 86,300 C91,296 96,286 99,274 C100,264 101,254 102,247 Z"],
+    ["hamstrings","M108,247 C118,250 126,259 130,272 C131,284 128,294 124,300 C119,296 114,286 111,274 C110,264 109,254 108,247 Z"],
+    ["calves","M99,300 C90,305 84,315 84,330 C84,344 88,356 93,363 C97,354 99,342 99,328 Z"],
+    ["calves","M111,300 C120,305 126,315 126,330 C126,344 122,356 117,363 C113,354 111,342 111,328 Z"]
+  ];
+
+  // Which muscle groups a saved session hit, derived from the exercises it logged.
+  function musclesForSession(session){
     var muscles = {};
-    document.querySelectorAll("#exerciseList .exercise").forEach(function(exEl){
-      if(exEl.classList.contains("skipped")) return;
-      var exId = exEl.dataset.exerciseId;
-      var hasData = Array.from(exEl.querySelectorAll(".set-row")).some(function(row){
-        var w = row.querySelector(".weight-input").value;
-        var r = row.querySelector(".reps-input").value;
-        return w !== "" || r !== "";
-      });
-      if(hasData){
-        (MUSCLE_MAP[exId]||[]).forEach(function(m){ muscles[m] = true; });
-      }
+    Object.keys(session.entries || {}).forEach(function(exId){
+      (MUSCLE_MAP[exId] || []).forEach(function(m){ muscles[m] = true; });
     });
     return muscles;
   }
 
-  function renderMuscleMap(){
-    var wrap = document.querySelector(".muscle-map-wrap");
-    if(!wrap) return;
-    var trained = computeTrainedMusclesToday();
-    wrap.querySelectorAll(".muscle-region").forEach(function(dot){
-      dot.classList.toggle("trained", !!trained[dot.dataset.muscle]);
-    });
-    var names = Object.keys(trained).map(function(m){ return MUSCLE_LABELS[m] || m; });
-    document.getElementById("muscleList").textContent = names.length
-      ? "I dag: " + names.join(", ")
-      : "Fyll inn et sett for å se hvilke muskler du trener i dag.";
+  function buildMuscleMapSVG(trained){
+    function shapes(list){
+      return list.map(function(s){
+        return '<path class="muscle-region'+(trained[s[0]] ? ' trained' : '')+'" d="'+s[1]+'"/>';
+      }).join("");
+    }
+    return '<svg class="muscle-svg-body" viewBox="0 0 420 420" role="img" aria-label="Kroppskart som viser muskelgruppene denne økten trente">'+
+      '<g><path class="muscle-outline" d="'+BODY_SILHOUETTE+'"/>'+shapes(MUSCLE_SHAPES_FRONT)+
+      '<text x="105" y="411" class="muscle-map-caption">Forside</text></g>'+
+      '<g transform="translate(210,0)"><path class="muscle-outline" d="'+BODY_SILHOUETTE+'"/>'+shapes(MUSCLE_SHAPES_BACK)+
+      '<text x="105" y="411" class="muscle-map-caption">Bakside</text></g>'+
+      '</svg>';
   }
 
   function lastEntryForExercise(exerciseId){
@@ -1356,13 +1322,11 @@
       skipBtn.addEventListener("click", function(){
         var skipped = wrap.classList.toggle("skipped");
         skipBtn.textContent = skipped ? "Ta med igjen" : "Hopp over";
-        renderMuscleMap();
       });
       head.querySelector(".exercise-head-sub").appendChild(skipBtn);
 
       container.appendChild(wrap);
     });
-    renderMuscleMap();
   }
 
   function addCustomExerciseBlock(){
@@ -1849,6 +1813,25 @@
           p.style.marginBottom = "8px";
           p.textContent = "Notat: " + s2.note;
           detail.appendChild(p);
+        }
+
+        var trained = musclesForSession(s2);
+        var trainedNames = Object.keys(trained).map(function(m){ return MUSCLE_LABELS[m] || m; });
+        if(trainedNames.length){
+          var muscleDet = document.createElement("details");
+          muscleDet.className = "muscle-toggle";
+          muscleDet.addEventListener("click", function(ev){ ev.stopPropagation(); });
+          var muscleSum = document.createElement("summary");
+          muscleDet.appendChild(muscleSum);
+          var mapWrap = document.createElement("div");
+          mapWrap.className = "muscle-map-wrap";
+          mapWrap.innerHTML = buildMuscleMapSVG(trained);
+          muscleDet.appendChild(mapWrap);
+          var mapList = document.createElement("div");
+          mapList.className = "muscle-list";
+          mapList.textContent = trainedNames.join(", ");
+          muscleDet.appendChild(mapList);
+          detail.appendChild(muscleDet);
         }
       } else if(item.type==="cardio"){
         var c2 = item.data;
@@ -2534,9 +2517,6 @@
   document.getElementById("addFoodDbBtn").addEventListener("click", addFoodFromDb);
   document.getElementById("addCustomFoodBtn").addEventListener("click", addCustomFood);
   document.getElementById("genShoppingListBtn").addEventListener("click", generateShoppingList);
-  document.getElementById("exerciseList").addEventListener("input", function(e){
-    if(e.target.classList.contains("weight-input") || e.target.classList.contains("reps-input")) renderMuscleMap();
-  });
   document.getElementById("nutriDate").addEventListener("change", renderNutritionCalc);
 
   document.getElementById("sessionDate").value = todayStr();
