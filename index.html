@@ -264,7 +264,8 @@
   .improve-item{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:0.85rem;}
   .improve-item:last-child{border-bottom:none;}
   .improve-delta{color:var(--success);font-weight:700;}
-  .bw-summary-text{color:var(--muted);font-size:0.85rem;margin-bottom:6px;line-height:1.5;}
+  .bw-summary-text{color:var(--text);font-size:0.95rem;font-weight:600;margin-bottom:6px;line-height:1.5;}
+  .bw-summary-note{color:var(--muted);font-size:0.8rem;margin-top:8px;line-height:1.5;}
   .howto-text{color:var(--muted);font-size:0.8rem;line-height:1.5;margin:6px 0 0;}
   .video-link{color:var(--accent2);font-size:0.8rem;display:inline-block;margin-top:8px;text-decoration:none;}
   .video-link:before{content:"▶ ";}
@@ -391,9 +392,10 @@
     </div>
 
     <div class="card" id="bwSummaryCard">
-      <h2>Kroppsvekt</h2>
+      <h2>Kroppsvekt (ukessnitt)</h2>
       <div id="bwSummaryText" class="bw-summary-text"></div>
       <div id="bwSummaryChart"></div>
+      <div id="bwSummaryNote" class="bw-summary-note"></div>
     </div>
 
     <div class="card" id="nutriHistoryCard">
@@ -1032,6 +1034,37 @@
     var points = data.bodyweight.map(function(b){ return {date:b.date, weight:b.weight}; });
     points.sort(function(a,b){return a.date.localeCompare(b.date);});
     return points.slice(-12);
+  }
+
+  // Daily weight swings 1-2 kg on water, salt and food volume, so a single
+  // reading says very little. Averaging per week is what makes a real trend
+  // visible, and it is what the plan's own adjustment rule asks you to read.
+  function bodyweightWeeklyAverages(){
+    var byWeek = {};
+    data.bodyweight.forEach(function(b){
+      var monday = startOfWeek(dateStrToDate(b.date));
+      var key = dateToStr(monday);
+      if(!byWeek[key]) byWeek[key] = [];
+      byWeek[key].push(b.weight);
+    });
+    return Object.keys(byWeek).sort().map(function(key){
+      var vals = byWeek[key];
+      var avg = vals.reduce(function(a,b){ return a+b; }, 0) / vals.length;
+      return {date:key, weight:Math.round(avg*10)/10, count:vals.length};
+    }).slice(-12);
+  }
+
+  // Compares the last two complete-ish weeks, so the summary line can talk
+  // about a trend instead of two arbitrary readings.
+  function bodyweightWeeklyTrend(){
+    var weeks = bodyweightWeeklyAverages();
+    if(weeks.length < 2) return null;
+    var prev = weeks[weeks.length-2], last = weeks[weeks.length-1];
+    return {
+      prev: prev, last: last,
+      delta: Math.round((last.weight - prev.weight)*10)/10,
+      weeks: weeks.length
+    };
   }
 
   function daysSinceLastBodyweight(){
@@ -1730,20 +1763,31 @@
       }).join("");
     }
 
-    var bwPoints = bodyweightPoints();
+    var bwWeeks = bodyweightWeeklyAverages();
     var bwText = document.getElementById("bwSummaryText");
     var bwChart = document.getElementById("bwSummaryChart");
-    if(bwPoints.length >= 2){
-      var diff = Math.round((bwPoints[bwPoints.length-1].weight - bwPoints[0].weight)*10)/10;
-      var diffText = diff===0 ? "uendret" : (diff>0 ? "+"+diff+" kg" : diff+" kg");
-      bwText.textContent = bwPoints[0].weight + " kg → " + bwPoints[bwPoints.length-1].weight + " kg (" + diffText + "). Husk: vekten kan stå stille selv om du blir sterkere og strammere, det er normalt.";
-      bwChart.innerHTML = buildProgressChartHTML(bwPoints);
-    } else if(bwPoints.length === 1){
-      bwText.textContent = "Kun én registrering enda (" + bwPoints[0].weight + " kg). Logg vekten ukentlig for å se en graf her.";
+    var bwNote = document.getElementById("bwSummaryNote");
+    if(bwWeeks.length >= 2){
+      var trend = bodyweightWeeklyTrend();
+      var d = trend.delta;
+      var deltaText = d===0 ? "uendret fra forrige uke"
+        : (d>0 ? "+"+d+" kg fra forrige uke" : d+" kg fra forrige uke");
+      bwText.textContent = "Ukessnitt: " + trend.prev.weight + " kg → " + trend.last.weight + " kg (" + deltaText + ").";
+      bwChart.innerHTML = buildProgressChartHTML(bwWeeks);
+      if(bwWeeks.length < 3){
+        bwNote.textContent = "Du har " + bwWeeks.length + " uker med data. Trenden blir først til å stole på etter 3–4 uker, så les dette som et startpunkt, ikke en konklusjon.";
+      } else {
+        bwNote.textContent = "Les trenden over 3–4 uker, ikke uke mot uke. Vekten kan stå stille eller stige litt selv om du blir sterkere og strammere, det er normalt.";
+      }
+    } else if(bwWeeks.length === 1){
+      bwText.textContent = "Ukessnitt så langt: " + bwWeeks[0].weight + " kg (" + bwWeeks[0].count +
+        (bwWeeks[0].count===1 ? " måling" : " målinger") + " denne uken).";
       bwChart.innerHTML = "";
+      bwNote.textContent = "Vei deg 3–4x/uke. Når du har et par uker vises snittet per uke her, som er det du faktisk skal styre etter.";
     } else {
       bwText.textContent = "Ingen kroppsvekt registrert enda.";
       bwChart.innerHTML = "";
+      bwNote.textContent = "";
     }
 
     var nutriDays = dailyNutritionTotals();
