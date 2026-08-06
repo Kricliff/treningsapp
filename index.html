@@ -109,11 +109,12 @@
   details.muscle-toggle summary:before{content:"Vis muskler trent ";}
   details.muscle-toggle[open] summary:before{content:"Skjul muskler trent ";}
   details.muscle-toggle{margin-bottom:8px;}
-  .chart{display:flex;align-items:flex-end;gap:6px;height:76px;margin:8px 0 2px;}
-  .chart-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;}
+  .chart{display:flex;align-items:flex-end;justify-content:flex-start;gap:4px;height:76px;margin:8px 0 2px;}
+  .chart-bar-wrap{flex:1 1 0;max-width:46px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;}
   .chart-bar-val{font-size:0.72rem;color:var(--muted);margin-bottom:2px;white-space:nowrap;}
-  .chart-bar{width:100%;max-width:22px;background:var(--accent2);border-radius:4px 4px 0 0;min-height:4px;}
-  .chart-bar-label{font-size:0.7rem;color:var(--muted);margin-top:3px;}
+  .chart-bar{width:100%;max-width:30px;background:var(--accent2);border-radius:4px 4px 0 0;min-height:4px;}
+  .chart-bar-label{font-size:0.7rem;color:var(--muted);margin-top:3px;white-space:nowrap;}
+  .chart-bar-val,.chart-bar-label{min-height:1em;}
   .optional-tag{color:var(--muted);font-weight:400;}
   .sets{margin-top:10px;display:flex;flex-direction:column;gap:8px;}
   .set-row{display:grid;grid-template-columns:28px 1fr 1fr;gap:8px;align-items:center;}
@@ -254,6 +255,7 @@
     font-family:var(--font-display);letter-spacing:0.04em;
   }
   .muscle-list{color:var(--muted);font-size:0.85rem;margin-top:10px;}
+  .nutri-day-macros{color:var(--text);font-size:0.85rem;font-weight:600;margin:6px 0 8px;}
   .pr-item{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:0.88rem;}
   .pr-item:last-child{border-bottom:none;}
   .pr-name{color:var(--text);}
@@ -858,6 +860,13 @@
     return d.getFullYear() + "-" + m + "-" + day;
   }
 
+  // User-entered names (custom exercises, custom food) end up in innerHTML.
+  function escapeHtml(str){
+    return String(str)
+      .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+  }
+
   function uid(){
     return Date.now().toString(36) + Math.random().toString(36).slice(2,8);
   }
@@ -1002,13 +1011,19 @@
     var max = Math.max.apply(null, points.map(function(p){return p.weight;}));
     var min = Math.min.apply(null, points.map(function(p){return p.weight;}));
     var range = (max-min) || 1;
-    return '<div class="chart">' + points.map(function(p){
+    // Date labels are wider than a bar slot, so thin them out when the series
+    // gets long instead of letting them run into each other.
+    var labelStep = Math.ceil(points.length / 6);
+    return '<div class="chart">' + points.map(function(p, i){
       var pct = points.length>1 ? 20 + ((p.weight-min)/range)*80 : 100;
       var parts = p.date.split("-");
       var dm = parts[2]+"."+parts[1];
-      return '<div class="chart-bar-wrap"><div class="chart-bar-val">'+p.weight+'</div>'+
+      var showLabel = (i % labelStep === 0) || i === points.length-1;
+      var showVal = points.length <= 8 || showLabel;
+      return '<div class="chart-bar-wrap">'+
+        '<div class="chart-bar-val">'+(showVal ? p.weight : "")+'</div>'+
         '<div class="chart-bar" style="height:'+pct+'%"></div>'+
-        '<div class="chart-bar-label">'+dm+'</div></div>';
+        '<div class="chart-bar-label">'+(showLabel ? dm : "")+'</div></div>';
     }).join("") + '</div>';
   }
 
@@ -1760,6 +1775,15 @@
     data.sessions.forEach(function(s){ items.push({type:"strength", data:s}); });
     data.cardio.forEach(function(c){ items.push({type:"cardio", data:c}); });
     data.bodyweight.forEach(function(b){ items.push({type:"bodyweight", data:b}); });
+    // One collapsed row per day that has any food logged, not one per item.
+    dailyNutritionTotals().forEach(function(d){
+      items.push({type:"nutrition", data:{
+        date: d.date,
+        createdAt: 0,
+        totals: d,
+        entries: nutritionEntriesForDate(d.date).sort(function(a,b){ return a.createdAt - b.createdAt; })
+      }});
+    });
     items.sort(function(a,b){
       if(a.data.date !== b.data.date) return b.data.date.localeCompare(a.data.date);
       return (b.data.createdAt||0) - (a.data.createdAt||0);
@@ -1783,6 +1807,10 @@
       } else if(item.type==="cardio"){
         var c = item.data;
         head.innerHTML = '<div><div class="d">Kondisjon: '+c.type+'</div><div class="t">'+c.date+' · '+c.minutes+' min</div></div><div>▾</div>';
+      } else if(item.type==="nutrition"){
+        var n = item.data;
+        head.innerHTML = '<div><div class="d">Kosthold: '+Math.round(n.totals.kcal)+' kcal</div>'+
+          '<div class="t">'+n.date+' · '+n.entries.length+(n.entries.length===1 ? ' vare' : ' varer')+'</div></div><div>▾</div>';
       } else {
         var b = item.data;
         head.innerHTML = '<div><div class="d">Kroppsvekt: '+b.weight+' kg</div><div class="t">'+b.date+'</div></div><div>▾</div>';
@@ -1804,7 +1832,7 @@
             return (st.weight!=null?st.weight+"kg":"-") + " × " + (st.reps!=null?st.reps:"-");
           }).join(", ");
           var tr = document.createElement("tr");
-          tr.innerHTML = '<td class="ex-name">'+exName+'</td><td>'+setsStr+'</td>';
+          tr.innerHTML = '<td class="ex-name">'+escapeHtml(exName)+'</td><td>'+setsStr+'</td>';
           table.appendChild(tr);
         });
         detail.appendChild(table);
@@ -1841,6 +1869,24 @@
           p2.textContent = "Notat: " + c2.note;
           detail.appendChild(p2);
         }
+      } else if(item.type==="nutrition"){
+        var n2 = item.data;
+        var target = data.settings.calorieTarget || DEFAULT_CALORIE_TARGET;
+        var foodTable = document.createElement("table");
+        n2.entries.forEach(function(f){
+          var tr = document.createElement("tr");
+          tr.innerHTML = '<td class="ex-name">'+escapeHtml(f.name)+'</td><td>'+Math.round(f.kcal)+' kcal</td>';
+          foodTable.appendChild(tr);
+        });
+        detail.appendChild(foodTable);
+
+        var macros = document.createElement("div");
+        macros.className = "nutri-day-macros";
+        macros.textContent = "Totalt: " + Math.round(n2.totals.kcal) + " / " + target.kcal + " kcal · " +
+          "P " + Math.round(n2.totals.protein) + "g · " +
+          "F " + Math.round(n2.totals.fat) + "g · " +
+          "K " + Math.round(n2.totals.carbs) + "g";
+        detail.appendChild(macros);
       }
 
       if(item.type==="strength"){
@@ -1855,16 +1901,22 @@
         detail.appendChild(stravaBtn);
       }
 
+      var isNutrition = item.type === "nutrition";
       var delBtn = document.createElement("button");
       delBtn.className = "del-btn";
-      delBtn.textContent = "Slett denne økten";
+      delBtn.textContent = isNutrition ? "Slett dagens kosthold" : "Slett denne økten";
       delBtn.addEventListener("click", function(ev){
         ev.stopPropagation();
-        if(confirm("Slette denne økten permanent?")){
+        var msg = isNutrition
+          ? "Slette alt kosthold registrert " + item.data.date + " permanent?"
+          : "Slette denne økten permanent?";
+        if(confirm(msg)){
           if(item.type==="strength"){
             data.sessions = data.sessions.filter(function(s){return s.id!==item.data.id;});
           } else if(item.type==="cardio"){
             data.cardio = data.cardio.filter(function(c){return c.id!==item.data.id;});
+          } else if(isNutrition){
+            data.nutritionLog = data.nutritionLog.filter(function(n){return n.date!==item.data.date;});
           } else {
             data.bodyweight = data.bodyweight.filter(function(b){return b.id!==item.data.id;});
           }
@@ -1873,6 +1925,7 @@
           renderExerciseList();
           renderBodyweightReminder();
           renderBodyweightSection();
+          renderNutritionCalc();
         }
       });
       detail.appendChild(delBtn);
